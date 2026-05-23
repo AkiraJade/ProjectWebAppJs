@@ -1,9 +1,19 @@
-/**
- * Little Mono Hirono 3D Landing Page Engine
- * Uses Vanilla JS, lerp interpolation, and Google <model-viewer> library
- */
+// -------------------------------------------------------------------------
+// 0. DIAGNOSTIC LOGGER (Writes to console)
+// -------------------------------------------------------------------------
+function logDebug(msg) {
+    console.log(msg);
+}
+
+logDebug("script.js loaded successfully.");
+if (window.location.protocol === 'file:') {
+    console.warn("⚠️ WARNING: Running via file:// protocol. Browsers block model-viewer from loading local files under file:// due to CORS policies. Please open via http://localhost/ProjectWebAppJs/index.html instead.");
+} else {
+    logDebug(`Running via protocol: ${window.location.protocol} (host: ${window.location.host})`);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+    logDebug("DOMContentLoaded fired.");
     // -------------------------------------------------------------------------
     // 1. SETUP STATE VARIABLES & DOM CACHE
     // -------------------------------------------------------------------------
@@ -12,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const lerpFactor = 0.08; // Momentum smoothing factor (lower = smoother)
     let maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     let scrollPercent = 0;
-    let isAnimating = false;
 
     const body = document.body;
     const header = document.getElementById('main-header');
@@ -20,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const studioBg = document.getElementById('studioBg');
     const studioShadows = document.getElementById('studioShadows');
     const spotlight = document.getElementById('spotlight');
+    const preloaderOverlay = document.getElementById('preloaderOverlay');
+    const preloadProgressBar = document.getElementById('preloadProgressBar');
+    const preloadStatusText = document.getElementById('preloadStatusText');
+    const preloadCounter = document.getElementById('preloadCounter');
+
     const heroPrince = document.getElementById('hero-prince');
 
     const phases = [
@@ -29,108 +43,128 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('phase4')
     ];
 
-    // Dispersion configuration for the 9 background models (V-Cluster -> edge peaking in %)
+    // Dispersion coordinates mapping (family photo -> zero gravity -> peaking edges)
+    // startX/Y: Initial family photo positions at 0% scroll (aligned with CSS "V" Cluster layout)
+    // endX/Y: Dispersed zero-gravity positions at 80% scroll
+    // peakX/Y: Border "peaking" coordinates at 100% scroll
+    // startRot/endRot/peakRot: Z-axis CSS tilts (organic loose float, keeping models facing front)
+    // spinY: Y-axis camera spin (ends at multiple of 360deg to return front-facing)
     const dispersionConfig = [
-        // hirono-1: Top-Left peaking (Layer 3)
-        { id: 'hirono-1', startX: -80, startY: -45, startScale: 0.85, endX: -140, endY: -110, endScale: 0.65, blur: 4, finalOpacity: 0.50, tilt: -12 },
-        // hirono-2: Top-Right peaking (Layer 3)
-        { id: 'hirono-2', startX: -20, startY: -45, startScale: 0.85, endX: 40, endY: -115, endScale: 0.70, blur: 3, finalOpacity: 0.45, tilt: 8 },
-        // hirono-3: Mid-Left peaking (Layer 2)
-        { id: 'hirono-3', startX: -105, startY: -60, startScale: 0.90, endX: -155, endY: -50, endScale: 0.85, blur: 4, finalOpacity: 0.60, tilt: -8 },
-        // hirono-4: Mid-Right peaking (Layer 2)
-        { id: 'hirono-4', startX: -50, startY: -75, startScale: 0.90, endX: 55, endY: -50, endScale: 0.80, blur: 4, finalOpacity: 0.60, tilt: 15 },
-        // hirono-5: Bottom-Left peaking (Layer 2)
-        { id: 'hirono-5', startX: 5, startY: -60, startScale: 0.90, endX: -130, endY: 15, endScale: 0.60, blur: 3, finalOpacity: 0.60, tilt: -10 },
-        // hirono-6: Bottom-Right peaking (Layer 1)
-        { id: 'hirono-6', startX: -145, startY: -50, startScale: 1.25, endX: 30, endY: 10, endScale: 0.65, blur: 5, finalOpacity: 0.45, tilt: -15 },
-        // hirono-7: Top-Center peaking (Layer 1)
-        { id: 'hirono-7', startX: -115, startY: -30, startScale: 1.25, endX: -50, endY: -130, endScale: 0.68, blur: 3, finalOpacity: 0.50, tilt: 10 },
-        // hirono-8: Bottom-Center peaking (Layer 1)
-        { id: 'hirono-8', startX: 45, startY: -50, startScale: 1.25, endX: -50, endY: 45, endScale: 0.70, blur: 3, finalOpacity: 0.50, tilt: -5 },
-        // hirono-9: Bottom-Left Outer peaking (Layer 1)
-        { id: 'hirono-9', startX: 15, startY: -30, startScale: 1.25, endX: -110, endY: 40, endScale: 0.75, blur: 4, finalOpacity: 0.50, tilt: 12 }
+        { id: 'hirono-1', startX: -80, startY: -45, startScale: 0.85, endX: -220, endY: -170, endScale: 0.50, peakX: -155, peakY: -50, peakScale: 0.70, startRot: -6, endRot: 8, peakRot: -2, spinY: -360, blur: 4 },
+        { id: 'hirono-2', startX: -20, startY: -45, startScale: 0.85, endX: 120, endY: -170, endScale: 0.50, peakX: 55, peakY: -50, peakScale: 0.70, startRot: 6, endRot: -8, peakRot: 2, spinY: 360, blur: 3 },
+        { id: 'hirono-3', startX: -105, startY: -60, startScale: 0.90, endX: -240, endY: 50, endScale: 1.10, peakX: -130, peakY: 15, peakScale: 0.80, startRot: -10, endRot: 12, peakRot: -3, spinY: -360, blur: 5 },
+        { id: 'hirono-4', startX: -50, startY: -75, startScale: 0.90, endX: -50, endY: -150, endScale: 0.80, peakX: -50, peakY: -130, peakScale: 0.75, startRot: 3, endRot: -3, peakRot: 0, spinY: 360, blur: 3 },
+        { id: 'hirono-5', startX: 5, startY: -60, startScale: 0.90, endX: 140, endY: 50, endScale: 1.10, peakX: 30, peakY: 15, peakScale: 0.80, startRot: 10, endRot: -12, peakRot: 3, spinY: 360, blur: 4 },
+        { id: 'hirono-6', startX: -145, startY: -50, startScale: 1.25, endX: -220, endY: -120, endScale: 1.10, peakX: -140, peakY: -110, peakScale: 0.65, startRot: -8, endRot: 10, peakRot: -4, spinY: -360, blur: 5 },
+        { id: 'hirono-7', startX: -115, startY: -30, startScale: 1.25, endX: -180, endY: 20, endScale: 1.10, peakX: -110, peakY: 40, peakScale: 0.75, startRot: -5, endRot: 8, peakRot: -3, spinY: -360, blur: 3 },
+        { id: 'hirono-8', startX: 45, startY: -50, startScale: 1.25, endX: 120, endY: -120, endScale: 1.10, peakX: 40, peakY: -110, peakScale: 0.65, startRot: 8, endRot: -10, peakRot: 4, spinY: 360, blur: 3 },
+        { id: 'hirono-9', startX: 15, startY: -30, startScale: 1.25, endX: 80, endY: 20, endScale: 1.10, peakX: 10, peakY: 40, peakScale: 0.75, startRot: 5, endRot: -8, peakRot: 3, spinY: 360, blur: 4 }
     ];
 
-    // Cache background model DOM elements to avoid repeated querying
-    dispersionConfig.forEach(config => {
-        config.element = document.getElementById(config.id);
+    // Cache elements for 9 floating models and attach listeners
+    const floatingModels = dispersionConfig.map(c => {
+        const model = document.getElementById(c.id);
+        if (model) {
+            model.addEventListener('load', () => {
+                logDebug(`SUCCESS: Model ${c.id} loaded.`);
+                model.classList.add('fully-loaded');
+            });
+            model.addEventListener('error', (err) => {
+                let detailStr = 'no detail';
+                if (err && err.detail) {
+                    detailStr = `type=${err.detail.type || 'N/A'}, url=${err.detail.url || 'N/A'}`;
+                }
+                logDebug(`ERROR: Model ${c.id} failed to load. Detail: ${detailStr}`);
+            });
+        }
+        return model;
     });
 
     // -------------------------------------------------------------------------
-    // 2. PRELOADER & STAGGERED INJECTION SYSTEM
+    // 2. STAGGERED LAZY LOADING OPTIMIZATION
     // -------------------------------------------------------------------------
-    const preloader = document.getElementById('preloader');
+    body.style.overflow = 'hidden'; // Lock scrolling during initial load
+    logDebug("Scrolling locked. Setup load listeners.");
 
-    function startStaggeredLoad() {
-        const backgroundModels = [
-            { id: 'hirono-1', src: 'assets/model1.glb' },
-            { id: 'hirono-2', src: 'assets/model2.glb' },
-            { id: 'hirono-3', src: 'assets/model3.glb' },
-            { id: 'hirono-4', src: 'assets/model4.glb' },
-            { id: 'hirono-5', src: 'assets/model5.glb' },
-            { id: 'hirono-6', src: 'assets/model6.glb' },
-            { id: 'hirono-7', src: 'assets/model7.glb' },
-            { id: 'hirono-8', src: 'assets/model8.glb' },
-            { id: 'hirono-9', src: 'assets/model9.glb' }
-        ];
+    function startExhibition() {
+        logDebug("startExhibition() triggered.");
+        if (preloadProgressBar) preloadProgressBar.style.width = '100%';
+        if (preloadCounter) preloadCounter.innerText = '100% Loaded (Exhibition Ready)';
+        if (preloadStatusText) preloadStatusText.innerText = 'Entering Exhibition...';
 
-        backgroundModels.forEach((model, index) => {
-            setTimeout(() => {
-                const el = document.getElementById(model.id);
-                if (el) {
-                    el.setAttribute('src', model.src);
+        setTimeout(() => {
+            logDebug("Preloader fading out. Scroll unlocked.");
+            if (preloaderOverlay) {
+                preloaderOverlay.classList.add('fade-out');
+            }
+            body.style.overflow = 'auto'; // Unlock scrolling
+            updateScene(0); // Run initial layout update
+            
+            // Staggered loading: Stagger injection of background models to optimize page load
+            floatingModels.forEach((model, index) => {
+                if (model) {
+                    const dataSrc = model.getAttribute('data-src');
+                    if (dataSrc) {
+                        setTimeout(() => {
+                            logDebug(`Loading background model: ${model.id} (${dataSrc})`);
+                            model.setAttribute('src', dataSrc);
+                        }, 200 * index); // 200ms delay spacing between each model load
+                    } else {
+                        logDebug(`WARNING: No data-src found on ${model.id}`);
+                    }
                 }
-            }, index * 200); // 200ms spacing between background models
-        });
+            });
+        }, 600);
     }
 
-    let preloaderDismissed = false;
-    const dismissPreloader = () => {
-        if (preloaderDismissed) return;
-        preloaderDismissed = true;
-        if (preloader) {
-            preloader.classList.add('fade-out');
-        }
-        startStaggeredLoad();
-        startAnimationLoop(); // Run animation to display loaded models smoothly
-    };
-
-    // Safety timeout in case load event does not fire (4 seconds maximum)
-    const safetyTimeout = setTimeout(dismissPreloader, 4000);
-
+    // Hero-First load: Track ONLY the hero model to unlock the screen ASAP
     if (heroPrince) {
-        heroPrince.addEventListener('load', () => {
-            clearTimeout(safetyTimeout);
-            dismissPreloader();
-        });
-
-        // Safety fallback: if model is already loaded in cache
+        logDebug(`heroPrince found. loaded state: ${heroPrince.loaded}`);
         if (heroPrince.loaded) {
-            clearTimeout(safetyTimeout);
-            dismissPreloader();
+            logDebug("Hero already loaded (cached). Starting exhibition.");
+            heroPrince.classList.add('fully-loaded');
+            startExhibition();
+        } else {
+            logDebug("Waiting for Hero model 'load' or 'error' event.");
+            heroPrince.addEventListener('load', () => {
+                logDebug("Hero Prince 'load' event fired successfully.");
+                heroPrince.classList.add('fully-loaded');
+                startExhibition();
+            });
+            heroPrince.addEventListener('error', (err) => {
+                let detailStr = 'no detail';
+                if (err && err.detail) {
+                    detailStr = `type=${err.detail.type || 'N/A'}, url=${err.detail.url || 'N/A'}`;
+                }
+                logDebug(`Hero Prince 'error' event fired. Detail: ${detailStr}`);
+                startExhibition();
+            });
         }
+    } else {
+        logDebug("ERROR: heroPrince element not found!");
+        startExhibition();
     }
 
-    // Trigger initial layout immediately
-    window.scrollTo(0, 0);
+    // Backup safety timeout
     setTimeout(() => {
-        updateScene(0);
-    }, 100);
+        if (body.style.overflow === 'hidden') {
+            logDebug("Safety load timeout triggered (4 seconds). Unlocking.");
+            startExhibition();
+        }
+    }, 4000);
 
     // -------------------------------------------------------------------------
     // 3. EVENT LISTENERS
     // -------------------------------------------------------------------------
     window.addEventListener('scroll', () => {
         targetScrollY = window.scrollY;
-        startAnimationLoop();
     });
 
     window.addEventListener('resize', () => {
         maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        startAnimationLoop();
     });
 
-    // Helper: Opacity calculate based on scroll window bounds
+    // Helper: Opacity calculation bounds
     function calculateOpacity(progress, fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd) {
         if (progress < fadeInStart) return 0;
         if (progress < fadeInEnd) {
@@ -143,10 +177,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return 0;
     }
 
+    let firstRender = true;
+
     // -------------------------------------------------------------------------
-    // 4. ANIMATION UPDATE LOOP (Drives zero-gravity dispersal)
+    // 4. ANIMATION UPDATE LOOP (Drives zero-gravity dispersal and peaking)
     // -------------------------------------------------------------------------
     function updateScene(percent) {
+        if (firstRender) {
+            firstRender = false;
+            logDebug(`updateScene first render: percent = ${percent}`);
+        }
         // --- 4.1 Update Header Glassmorphic Transition ---
         if (currentScrollY > 50) {
             header.classList.add('scrolled');
@@ -155,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- 4.2 Scroll Progress Bar ---
-        progressBar.style.width = `${percent * 100}%`;
+        if (progressBar) progressBar.style.width = `${percent * 100}%`;
 
         // --- 4.3 Ambient Background Vignette & Spotlight ---
         let shadowOpacity = 0.95;
@@ -173,11 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
             shadowOpacity = 0.35 + (p * 0.25); // returns vignette slightly
             ambientSpotlight = 0.30 - (p * 0.15); // dims spotlight
         }
-        studioShadows.style.opacity = shadowOpacity;
-        spotlight.style.opacity = ambientSpotlight;
+        if (studioShadows) studioShadows.style.opacity = shadowOpacity;
+        if (spotlight) spotlight.style.opacity = ambientSpotlight;
 
         // Background Grid Parallax
-        studioBg.style.transform = `scale(${1 + percent * 0.05})`;
+        if (studioBg) studioBg.style.transform = `scale(${1 + percent * 0.05})`;
         const gridElement = document.querySelector('.studio-grid');
         if (gridElement) {
             gridElement.style.transform = `translate3d(0, ${percent * 40}px, 0) rotate(${percent * 1.5}deg)`;
@@ -185,57 +225,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 4.4 Hero Model (PrinceCenter) Animating ---
         let heroScale = 1.0;
-        let heroAngle = 90; // Start at 90deg offset so model faces forward
-        let heroY = -15;    // Start sitting lower at -15%
+        let heroAngle = 90; // Start at 90deg (facing front)
         
         if (percent <= 0.8) {
             const t = percent / 0.8;
             heroScale = 1.0 + 0.65 * t; // Scale up to 1.65
-            heroAngle = 90 + t * 360;  // Full 360-degree Y rotation (90deg to 450deg)
-            heroY = -15 - 35 * t;      // Interpolate Y from -15% to -50%
+            heroAngle = 90 + t * 360;   // Full 360-degree Y rotation starting from 90deg
         } else {
             const fadeProgress = (percent - 0.8) / 0.2;
             heroScale = 1.65 - 0.65 * fadeProgress; // Scale back down to 1.0
-            heroAngle = 450;                        // Locked facing forward (450deg is identical to 90deg)
-            heroY = -50 + 35 * fadeProgress;        // Return Y from -50% to -15%
+            heroAngle = 450;                        // Locked facing front (450deg = 90deg + 360deg)
         }
 
         if (heroPrince) {
-            heroPrince.style.opacity = 1;
-            heroPrince.style.transform = `translate3d(-50%, ${heroY}%, 0px) scale(calc(${heroScale} * var(--hirono-scale-multiplier)))`;
+            heroPrince.style.opacity = heroPrince.classList.contains('fully-loaded') ? 1 : 0;
+            heroPrince.style.transform = `translate(-50%, -50%) scale(calc(${heroScale} * var(--hirono-scale-multiplier)))`;
             heroPrince.setAttribute('camera-orbit', `${heroAngle}deg 75deg 105%`);
         }
 
-        // --- 4.5 9 Floating Models Dispersion ---
+        // --- 4.5 9 Floating Models Dispersion and Peaking ---
         dispersionConfig.forEach(config => {
-            const modelEl = config.element || document.getElementById(config.id);
+            const modelEl = document.getElementById(config.id);
             if (!modelEl) return;
 
-            let t = 0;
+            // Only update transform if the model has fully loaded
+            if (!modelEl.classList.contains('fully-loaded')) {
+                modelEl.style.opacity = 0;
+                return;
+            }
+
+            let currentX = 0;
+            let currentY = 0;
+            let currentScale = 1.0;
             let currentOpacity = 1.0;
             let currentBlur = 0;
             let currentTilt = 0;
+            let currentAngle = 90; // Start facing front
 
             if (percent <= 0.8) {
-                t = percent / 0.8;
-                currentOpacity = 1.0 + (config.finalOpacity - 1.0) * t;
-                currentBlur = config.blur * t;
-                currentTilt = config.tilt * t;
+                // Scroll 0% -> 80%: Zero-gravity explosion and drift
+                const t = percent / 0.8;
+                currentX = config.startX + (config.endX - config.startX) * t;
+                currentY = config.startY + (config.endY - config.startY) * t;
+                currentScale = config.startScale + (config.endScale - config.startScale) * t;
+                currentTilt = config.startRot + (config.endRot - config.startRot) * t;
+                currentAngle = 90 + (config.spinY || 0) * t;
+                
+                // Keep them fully visible, fading slightly to depth opacity at 80% scroll
+                currentOpacity = 1.0;
+                currentBlur = 0; // Focus sharp
             } else {
-                t = 1.0;
-                currentOpacity = config.finalOpacity;
-                currentBlur = config.blur;
-                currentTilt = config.tilt;
+                // Scroll 80% -> 100%: Drift into "peaking border" positions framing the CTA
+                const t = (percent - 0.8) / 0.2; // 0 to 1
+                currentX = config.endX + (config.peakX - config.endX) * t;
+                currentY = config.endY + (config.peakY - config.endY) * t;
+                currentScale = config.endScale + (config.peakScale - config.endScale) * t;
+                currentTilt = config.endRot + (config.peakRot - config.endRot) * t;
+                currentAngle = 90 + (config.spinY || 0); // Maintain final front-facing rotation
+
+                // Fade to soft peaking opacity & apply blur for depth framing (0.50 target opacity)
+                currentOpacity = 1.0 - (0.50 * t); // fades from 1.0 down to 0.50
+                currentBlur = config.blur * t;     // blurs up to target blur
             }
 
-            const currentX = config.startX + (config.endX - config.startX) * t;
-            const currentY = config.startY + (config.endY - config.startY) * t;
-            const currentScale = config.startScale + (config.endScale - config.startScale) * t;
-
-            // Apply 2D tilt roll, offset coordinates, and scale
-            modelEl.style.transform = `translate3d(${currentX}%, ${currentY}%, 0px) scale(calc(${currentScale} * var(--hirono-scale-multiplier))) rotate(${currentTilt}deg)`;
+            // Apply translate, responsive scale, and organic Z-tilt
+            modelEl.style.transform = `translate(${currentX}%, ${currentY}%) scale(calc(${currentScale} * var(--hirono-scale-multiplier))) rotate(${currentTilt}deg)`;
             modelEl.style.opacity = currentOpacity;
-            modelEl.style.visibility = 'visible'; // Keep visible to frame the CTA screen
+            modelEl.setAttribute('camera-orbit', `${currentAngle}deg 75deg 105%`);
             
             if (currentBlur > 0.1) {
                 modelEl.style.filter = `blur(${currentBlur}px)`;
@@ -263,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         phases[2].style.opacity = op3;
         phases[2].style.transform = `translate3d(0, ${y3}px, 0)`;
 
-        // Phase 4 (80% to 100%)
+        // Phase 4 (80% to 100% - CTA)
         const op4 = calculateOpacity(percent, 0.8, 0.86, 1.1, 1.1);
         let y4 = (1 - op4) * 45;
         if (percent > 0.85) {
@@ -277,34 +333,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     // 5. SMOOTH SCROLL RENDERING ENGINE (Lerp)
     // -------------------------------------------------------------------------
-    function startAnimationLoop() {
-        if (isAnimating) return;
-        isAnimating = true;
-        requestAnimationFrame(smoothScrollLoop);
-    }
-
     function smoothScrollLoop() {
-        if (!isAnimating) return;
-
         currentScrollY += (targetScrollY - currentScrollY) * lerpFactor;
 
-        // Prevent micro-float calculations and pause loop when settled
-        if (Math.abs(targetScrollY - currentScrollY) < 0.01) {
+        // Prevent micro-float calculations
+        if (Math.abs(targetScrollY - currentScrollY) < 0.05) {
             currentScrollY = targetScrollY;
-            isAnimating = false;
         }
 
         // Map scroll position to percentage [0.0 to 1.0]
         scrollPercent = Math.max(0, Math.min(1, currentScrollY / maxScroll));
 
-        // Update view components directly
-        updateScene(scrollPercent);
-
-        if (isAnimating) {
-            requestAnimationFrame(smoothScrollLoop);
+        // Update view components if preloader is hidden
+        if (body.style.overflow !== 'hidden') {
+            updateScene(scrollPercent);
         }
+
+        requestAnimationFrame(smoothScrollLoop);
     }
 
     // Start rendering loops
-    startAnimationLoop();
+    requestAnimationFrame(smoothScrollLoop);
 });
