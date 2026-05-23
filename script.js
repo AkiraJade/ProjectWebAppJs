@@ -49,16 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // peakX/Y: Border "peaking" coordinates at 100% scroll
     // startRot/endRot/peakRot: Z-axis CSS tilts (organic loose float, keeping models facing front)
     // spinY: Y-axis camera spin (ends at multiple of 360deg to return front-facing)
+    // scaleCorrection: Per-model bounding-box normalizer (shrinks oversized models, boosts small ones)
+    // swayDuration: Idle float animation speed in seconds (staggered per model)
     const dispersionConfig = [
-        { id: 'hirono-1', startX: -80, startY: -45, startScale: 0.85, endX: -220, endY: -170, endScale: 0.50, peakX: -155, peakY: -50, peakScale: 0.70, startRot: -6, endRot: 8, peakRot: -2, spinY: -360, blur: 4 },
-        { id: 'hirono-2', startX: -20, startY: -45, startScale: 0.85, endX: 120, endY: -170, endScale: 0.50, peakX: 55, peakY: -50, peakScale: 0.70, startRot: 6, endRot: -8, peakRot: 2, spinY: 360, blur: 3 },
-        { id: 'hirono-3', startX: -105, startY: -60, startScale: 0.90, endX: -240, endY: 50, endScale: 1.10, peakX: -130, peakY: 15, peakScale: 0.80, startRot: -10, endRot: 12, peakRot: -3, spinY: -360, blur: 5 },
-        { id: 'hirono-4', startX: -50, startY: -75, startScale: 0.90, endX: -50, endY: -150, endScale: 0.80, peakX: -50, peakY: -130, peakScale: 0.75, startRot: 3, endRot: -3, peakRot: 0, spinY: 360, blur: 3 },
-        { id: 'hirono-5', startX: 5, startY: -60, startScale: 0.90, endX: 140, endY: 50, endScale: 1.10, peakX: 30, peakY: 15, peakScale: 0.80, startRot: 10, endRot: -12, peakRot: 3, spinY: 360, blur: 4 },
-        { id: 'hirono-6', startX: -145, startY: -50, startScale: 1.25, endX: -220, endY: -120, endScale: 1.10, peakX: -140, peakY: -110, peakScale: 0.65, startRot: -8, endRot: 10, peakRot: -4, spinY: -360, blur: 5 },
-        { id: 'hirono-7', startX: -115, startY: -30, startScale: 1.25, endX: -180, endY: 20, endScale: 1.10, peakX: -110, peakY: 40, peakScale: 0.75, startRot: -5, endRot: 8, peakRot: -3, spinY: -360, blur: 3 },
-        { id: 'hirono-8', startX: 45, startY: -50, startScale: 1.25, endX: 120, endY: -120, endScale: 1.10, peakX: 40, peakY: -110, peakScale: 0.65, startRot: 8, endRot: -10, peakRot: 4, spinY: 360, blur: 3 },
-        { id: 'hirono-9', startX: 15, startY: -30, startScale: 1.25, endX: 80, endY: 20, endScale: 1.10, peakX: 10, peakY: 40, peakScale: 0.75, startRot: 5, endRot: -8, peakRot: 3, spinY: 360, blur: 4 }
+        { id: 'hirono-1', scaleCorrection: 0.90, startX: -78, startY: -48, startScale: 0.72, endX: -220, endY: -170, endScale: 0.50, peakX: -155, peakY: -50, peakScale: 0.70, startRot: -6, endRot: 8, peakRot: -2, spinY: -360, blur: 4, swayDuration: 6 },
+        { id: 'hirono-2', scaleCorrection: 0.90, startX: -22, startY: -48, startScale: 0.72, endX: 120, endY: -170, endScale: 0.50, peakX: 55, peakY: -50, peakScale: 0.70, startRot: 6, endRot: -8, peakRot: 2, spinY: 360, blur: 3, swayDuration: 7 },
+        { id: 'hirono-3', scaleCorrection: 0.85, startX: -105, startY: -68, startScale: 0.78, endX: -240, endY: 50, endScale: 1.00, peakX: -130, peakY: 15, peakScale: 0.80, startRot: -10, endRot: 12, peakRot: -3, spinY: -360, blur: 5, swayDuration: 8 },
+        { id: 'hirono-4', scaleCorrection: 0.88, startX: -36, startY: -92, startScale: 0.78, endX: -50, endY: -150, endScale: 0.75, peakX: -50, peakY: -130, peakScale: 0.70, startRot: 3, endRot: -3, peakRot: 0, spinY: 360, blur: 3, swayDuration: 9 },
+        { id: 'hirono-5', scaleCorrection: 0.85, startX: 5, startY: -68, startScale: 0.78, endX: 140, endY: 50, endScale: 1.00, peakX: 30, peakY: 15, peakScale: 0.80, startRot: 10, endRot: -12, peakRot: 3, spinY: 360, blur: 4, swayDuration: 7.5 },
+        { id: 'hirono-6', scaleCorrection: 0.72, startX: -140, startY: -58, startScale: 0.95, endX: -220, endY: -120, endScale: 0.95, peakX: -140, peakY: -110, peakScale: 0.65, startRot: -8, endRot: 10, peakRot: -4, spinY: -360, blur: 5, swayDuration: 10 },
+        { id: 'hirono-7', scaleCorrection: 0.72, startX: -112, startY: -35, startScale: 0.95, endX: -180, endY: 20, endScale: 0.95, peakX: -110, peakY: 40, peakScale: 0.75, startRot: -5, endRot: 8, peakRot: -3, spinY: -360, blur: 3, swayDuration: 8.5 },
+        { id: 'hirono-8', scaleCorrection: 0.72, startX: 40, startY: -58, startScale: 0.95, endX: 120, endY: -120, endScale: 0.95, peakX: 40, peakY: -110, peakScale: 0.65, startRot: 8, endRot: -10, peakRot: 4, spinY: 360, blur: 3, swayDuration: 9.5 },
+        { id: 'hirono-9', scaleCorrection: 0.72, startX: 12, startY: -35, startScale: 0.95, endX: 80, endY: 20, endScale: 0.95, peakX: 10, peakY: 40, peakScale: 0.75, startRot: 5, endRot: -8, peakRot: 3, spinY: 360, blur: 4, swayDuration: 11 }
     ];
 
     // Cache elements for 9 floating models and attach listeners
@@ -75,6 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     detailStr = `type=${err.detail.type || 'N/A'}, url=${err.detail.url || 'N/A'}`;
                 }
                 logDebug(`ERROR: Model ${c.id} failed to load. Detail: ${detailStr}`);
+            });
+
+            // --- Hover interactivity: +5% scale boost ---
+            model.addEventListener('mouseenter', () => {
+                if (!model.classList.contains('fully-loaded')) return;
+                model._hoverBoost = true;
+            });
+            model.addEventListener('mouseleave', () => {
+                model._hoverBoost = false;
             });
         }
         return model;
@@ -182,6 +193,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------------------
     // 4. ANIMATION UPDATE LOOP (Drives zero-gravity dispersal and peaking)
     // -------------------------------------------------------------------------
+
+    // Idle sway: compute a subtle per-model float offset based on elapsed time
+    const startTime = performance.now();
+
+    function getSwayOffset(elapsedMs, duration) {
+        const t = (elapsedMs / 1000) % duration / duration; // 0..1 normalized cycle
+        const yOff = Math.sin(t * Math.PI * 2) * 1.0; // ±1.0% vertical sway
+        const xOff = Math.cos(t * Math.PI * 2 + 0.5) * 0.3; // ±0.3% horizontal drift
+        return { x: xOff, y: yOff };
+    }
+
     function updateScene(percent) {
         if (firstRender) {
             firstRender = false;
@@ -224,16 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- 4.4 Hero Model (PrinceCenter) Animating ---
-        let heroScale = 1.0;
+        let heroScale = 1.15; // Boosted base scale for hero dominance
         let heroAngle = 90; // Start at 90deg (facing front)
         
         if (percent <= 0.8) {
             const t = percent / 0.8;
-            heroScale = 1.0 + 0.65 * t; // Scale up to 1.65
+            heroScale = 1.15 + 0.55 * t; // Scale up to 1.70
             heroAngle = 90 + t * 360;   // Full 360-degree Y rotation starting from 90deg
         } else {
             const fadeProgress = (percent - 0.8) / 0.2;
-            heroScale = 1.65 - 0.65 * fadeProgress; // Scale back down to 1.0
+            heroScale = 1.70 - 0.55 * fadeProgress; // Scale back down to 1.15
             heroAngle = 450;                        // Locked facing front (450deg = 90deg + 360deg)
         }
 
@@ -243,7 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
             heroPrince.setAttribute('camera-orbit', `${heroAngle}deg 75deg 105%`);
         }
 
-        // --- 4.5 9 Floating Models Dispersion and Peaking ---
+        // --- 4.5 9 Floating Models Dispersion, Peaking, Idle Sway & Hover ---
+        const elapsed = performance.now() - startTime;
+
         dispersionConfig.forEach(config => {
             const modelEl = document.getElementById(config.id);
             if (!modelEl) return;
@@ -288,14 +312,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentBlur = config.blur * t;     // blurs up to target blur
             }
 
-            // Apply translate, responsive scale, and organic Z-tilt
+            // Apply per-model bounding-box scale correction
+            currentScale *= (config.scaleCorrection || 1.0);
+
+            // Add idle sway offset (subtle floating movement when not scrolling)
+            const sway = getSwayOffset(elapsed, config.swayDuration || 8);
+            currentX += sway.x;
+            currentY += sway.y;
+
+            // Apply hover boost (+5% scale)
+            const hoverMultiplier = modelEl._hoverBoost ? 1.05 : 1.0;
+            currentScale *= hoverMultiplier;
+
+            // Apply translate, responsive scale, organic Z-tilt, and hover glow
             modelEl.style.transform = `translate(${currentX}%, ${currentY}%) scale(calc(${currentScale} * var(--hirono-scale-multiplier))) rotate(${currentTilt}deg)`;
             modelEl.style.opacity = currentOpacity;
             modelEl.setAttribute('camera-orbit', `${currentAngle}deg 75deg 105%`);
             
             if (currentBlur > 0.1) {
                 modelEl.style.filter = `blur(${currentBlur}px)`;
-            } else {
+            } else if (!modelEl._hoverBoost) {
                 modelEl.style.filter = 'none';
             }
         });
