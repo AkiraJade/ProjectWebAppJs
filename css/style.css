@@ -344,7 +344,7 @@ body {
     text-align: center;
     padding: 0 2rem;
     opacity: 0;
-    transform: translate3d(0, 50px, 0);
+    transform: translate3d(0, var(--y, 50px), 0) skewY(var(--skew, 0deg));
     will-change: transform, opacity;
 }
 
@@ -357,6 +357,16 @@ body {
     line-height: 1.15;
     margin-bottom: 1.5rem;
     max-width: 800px;
+}
+
+.story-title.text-reveal {
+    background: linear-gradient(120deg, var(--text-primary) 35%, var(--accent-gold) 50%, var(--text-primary) 65%);
+    background-size: 200% 100%;
+    background-position: var(--shimmer-pos, 200%) 0;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    will-change: background-position;
 }
 
 .story-subtitle {
@@ -395,6 +405,13 @@ body {
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.01em;
+    background: linear-gradient(120deg, var(--text-primary) 35%, var(--accent-gold) 50%, var(--text-primary) 65%);
+    background-size: 200% 100%;
+    background-position: var(--shimmer-pos, 200%) 0;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    will-change: background-position;
 }
 
 .cta-desc {
