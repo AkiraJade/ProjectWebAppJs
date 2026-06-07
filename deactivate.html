@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deactivate Account — Little Mono</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-page-container">
+        <div class="auth-card">
+            <div class="auth-card-header" onclick="window.location.href='index.html'">
+                <div class="logo">
+                    <span class="brand-name">LITTLE MONO</span>
+                    <span class="sub-brand">DESIGNER TOYS</span>
+                </div>
+            </div>
+            
+            <form class="auth-form active" id="deactivateForm">
+                <h2 class="auth-title" style="color: #C94A4A;">Deactivate Account</h2>
+                <p class="auth-subtitle">We are sad to see you go. This action will deactivate your unboxing collection history.</p>
+                
+                <div class="input-group">
+                    <label for="deactivateEmail">Confirm Email Address</label>
+                    <input type="email" id="deactivateEmail" placeholder="Enter your email" required autocomplete="email">
+                </div>
+                
+                <div style="font-size: 0.8rem; color: #C94A4A; background-color: rgba(201, 74, 74, 0.05); border: 1px solid rgba(201, 74, 74, 0.2); border-radius: 8px; padding: 0.8rem 1rem; margin-top: 0.5rem; line-height: 1.4;">
+                    ⚠️ Warning: Deactivating your account is irreversible. All order history and collector statistics will be archived.
+                </div>
+                
+                <button type="submit" class="btn-auth-submit" style="background-color: #C94A4A; box-shadow: 0 4px 15px rgba(201, 74, 74, 0.25);">Confirm Deactivation</button>
+            </form>
+
+            <div class="auth-back-link">
+                <a href="dashboard.html">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
+                        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    <span style="vertical-align: middle;">Back to Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <script>
+        const token = localStorage.getItem('token');
+        const userJson = localStorage.getItem('user');
+        if (!token || !userJson) {
+            alert("Unauthorized. Redirecting to login.");
+            window.location.href = "login.html";
+        }
+
+        const user = JSON.parse(userJson);
+        const form = document.getElementById('deactivateForm');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('deactivateEmail').value.trim();
+
+            if (email !== user.email) {
+                alert("The entered email does not match your active user account.");
+                return;
+            }
+
+            if (!confirm("Are you absolutely sure you want to deactivate your collector profile?")) {
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/deactivate', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert("Your account has been successfully deactivated.");
+                    localStorage.clear();
+                    window.location.href = "index.html";
+                } else {
+                    alert(data.error || "Deactivation failed.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection error. Ensure the server is online.");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -444,6 +444,128 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(smoothScrollLoop);
     }
 
+    // -------------------------------------------------------------------------
+    // 6. AUTHENTICATION & TOAST NOTIFICATION SYSTEM
+    // -------------------------------------------------------------------------
+    const API_BASE_URL = 'http://localhost:3000/api/v1';
+
+    // 6.1 Toast Notifications Utility
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✨';
+        if (type === 'error') icon = '⚠️';
+        
+        toast.innerHTML = `
+            <div class="toast-content">
+                <span class="toast-icon">${icon}</span>
+                <span>${message}</span>
+            </div>
+            <button class="toast-close-btn">&times;</button>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Trigger transition
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+
+        // Auto remove helper
+        const removeToast = () => {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            toast.addEventListener('transitionend', () => {
+                toast.remove();
+            }, { once: true });
+        };
+
+        const autoRemoveTimeout = setTimeout(removeToast, 4000);
+
+        // Manual Close
+        const closeBtn = toast.querySelector('.toast-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                clearTimeout(autoRemoveTimeout);
+                removeToast();
+            });
+        }
+    }
+
+    // 6.2 Session State Management & Navbar Update
+    const headerActions = document.querySelector('.header-actions');
+
+    function updateNavbarState() {
+        if (!headerActions) return;
+
+        const token = localStorage.getItem('token');
+        const userJson = localStorage.getItem('user');
+
+        if (token && userJson) {
+            try {
+                const user = JSON.parse(userJson);
+                // Create user profile menu HTML
+                headerActions.innerHTML = `
+                    <div class="user-profile-menu" id="userProfileMenu">
+                        <span class="user-welcome">Welcome, <strong id="navUserName">${escapeHTML(user.name)}</strong></span>
+                        <button class="btn-logout" id="logoutBtn">Sign Out</button>
+                    </div>
+                `;
+
+                // Wire up logout button
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', handleLogout);
+                }
+            } catch (err) {
+                console.error("Error parsing user from localStorage:", err);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                restoreDefaultNavbar();
+            }
+        } else {
+            restoreDefaultNavbar();
+        }
+    }
+
+    function restoreDefaultNavbar() {
+        headerActions.innerHTML = `
+            <a href="login.html" class="btn-login" id="loginRegisterBtn">Login / Register</a>
+        `;
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        updateNavbarState();
+        showToast("Signed out successfully.", "info");
+    }
+
+    // HTML escape utility to prevent XSS
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+
+    // Initialize the navbar profile state at startup
+    updateNavbarState();
+
     // Start rendering loops
     requestAnimationFrame(smoothScrollLoop);
 });

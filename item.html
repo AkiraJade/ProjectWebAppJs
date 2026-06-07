@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hirono Hero Prince — Little Mono</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Configure Meshopt Decoder for compressed GLB files -->
+    <script>
+      self.ModelViewerElement = self.ModelViewerElement || {};
+      self.ModelViewerElement.meshoptDecoderLocation = 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.21.0/meshopt_decoder.js';
+    </script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo" onclick="window.location.href='index.html'">
+            <span class="brand-name">LITTLE MONO</span>
+            <span class="sub-brand">DESIGNER TOYS</span>
+        </div>
+        <nav class="nav-links">
+            <a href="home.html" class="nav-link">Home</a>
+            <a href="cart.html" class="nav-link">Cart</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="profile.html" class="nav-link">Profile</a>
+        </nav>
+        <div class="header-actions">
+            <a href="login.html" class="btn-login" id="loginRegisterBtn">Login / Register</a>
+        </div>
+    </header>
+
+    <div class="auth-page-container" style="padding-top: 120px; display: flex; flex-direction: column; height: auto;">
+        <div class="auth-card" style="max-width: 900px; width: 95%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; align-items: center;">
+            <div style="height: 400px; background-color: rgba(245, 239, 230, 0.4); border-radius: 16px; border: 1px solid rgba(197, 168, 128, 0.2); position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+                <model-viewer style="width: 100%; height: 100%;" src="assets/PrinceCenter.glb" alt="Hirono Hero Prince" camera-controls shadow-intensity="1" shadow-softness="0.8" environment-image="neutral" exposure="1.1" disable-zoom></model-viewer>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                <div>
+                    <span style="font-family: var(--font-heading); font-size: 0.85rem; color: var(--accent-gold-dark); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Authentic Pop Mart</span>
+                    <h2 style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--text-primary); margin-top: 0.2rem;">Hirono Hero Prince</h2>
+                </div>
+                
+                <span style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">$599.00</span>
+                
+                <p style="font-family: var(--font-body); font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                    The Hirono Hero Prince designer toy encapsulates raw emotion and vulnerability, crafted with pristine, hand-painted details. Direct from Pop Mart, 100% authentic and rare.
+                </p>
+                
+                <div style="border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Availability: <strong style="color: var(--accent-gold-dark);">In Stock (15 units)</strong></span>
+                </div>
+                
+                <button class="btn-auth-submit" onclick="window.location.href='cart.html'">Add to Cart</button>
+            </div>
+        </div>
+        
+        <div class="auth-back-link" style="margin-top: 2rem;">
+            <a href="index.html">
+                <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                <span style="vertical-align: middle;">Back to Home</span>
+            </a>
+        </div>
+    </div>
+    <script>
+        const token = localStorage.getItem('token');
+        const userJson = localStorage.getItem('user');
+        if (token && userJson) {
+            const user = JSON.parse(userJson);
+            document.querySelector('.header-actions').innerHTML = `
+                <div class="user-profile-menu">
+                    <span class="user-welcome">Welcome, <strong>${user.name}</strong></span>
+                    <button class="btn-logout" onclick="localStorage.clear(); window.location.reload();">Sign Out</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
