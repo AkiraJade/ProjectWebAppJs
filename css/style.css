@@ -763,6 +763,9 @@ body {
 }
 
 .input-group input {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     background-color: rgba(245, 239, 230, 0.4);
     border: 1px solid rgba(197, 168, 128, 0.25);
     border-radius: 8px;
@@ -1007,6 +1010,7 @@ body {
     box-shadow: 0 35px 70px rgba(118, 110, 101, 0.12);
     max-height: 90vh;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrollbar */
     scrollbar-width: thin;
     scrollbar-color: var(--accent-gold) transparent;
 }
