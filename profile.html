@@ -10,21 +10,9 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header class="main-header">
-        <div class="logo" onclick="window.location.href='index.html'">
-            <span class="brand-name">LITTLE MONO</span>
-            <span class="sub-brand">DESIGNER TOYS</span>
-        </div>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="cart.html" class="nav-link">Cart</a>
-            <a href="dashboard.html" class="nav-link">Dashboard</a>
-            <a href="profile.html" class="nav-link active">Profile</a>
-        </nav>
-        <div class="header-actions">
-            <a href="login.html" class="btn-login" id="loginRegisterBtn">Login / Register</a>
-        </div>
-    </header>
+    <!-- Dynamic Navigation Header -->
+    <div id="header-placeholder"></div>
+
 
     <div class="auth-page-container" style="padding-top: 120px; height: auto;">
         <div class="auth-card" style="max-width: 600px; width: 95%;">
@@ -77,23 +65,10 @@
             </div>
         </div>
     </div>
+    <script src="js/header-loader.js"></script>
     <script>
-        const token = localStorage.getItem('token');
         const userJson = localStorage.getItem('user');
-        if (!token || !userJson) {
-            alert("Unauthorized. Redirecting to login.");
-            window.location.href = "login.html";
-        }
-
-        const user = JSON.parse(userJson);
-        
-        // Show user details in navbar
-        document.querySelector('.header-actions').innerHTML = `
-            <div class="user-profile-menu">
-                <span class="user-welcome">Welcome, <strong>${user.name}</strong></span>
-                <button class="btn-logout" onclick="localStorage.clear(); window.location.href='index.html';">Sign Out</button>
-            </div>
-        `;
+        const user = userJson ? JSON.parse(userJson) : {};
 
         const form = document.getElementById('profileForm');
         form.addEventListener('submit', async (e) => {

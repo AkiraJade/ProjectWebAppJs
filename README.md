@@ -33,28 +33,59 @@ A full-stack web application for managing a Pop Mart figurine shop, featuring pr
 
 ---
 
-## 📦 Installation
+## 🎓 Course Requirements & Machine Problems
+
+This project satisfies the following curriculum requirements and machine problems (MPs):
+
+### 🛠️ Machine Problems & Quizzes (Rubric & Target Breakdown)
+
+| Requirement Code | Description | Point Value | Status |
+| :--- | :--- | :--- | :--- |
+| **MP1** | NodeJS CRUD API | 20 pts | [x] Completed |
+| **MP2** | NodeJS CRUD API | 20 pts | [x] Completed |
+| **MP3** | CRUD jQuery/DataTables + Multiple File Uploads for MP1 | 20 pts | [/] In Progress |
+| **MP4** | CRUD jQuery/DataTables frontend for MP2 | 20 pts | [/] In Progress |
+| **MP5** | Generate and send tokens for authentication, save token on `users` table | 20 (15 + 5) pts | [x] Completed |
+| **MP6** | User Registration & Login API via jQuery AJAX. Admin dashboard to update roles, deactivate users, and list users on a DataTable | 20 pts | [/] In Progress |
+| **MP7** | Use Sequelize ORM on CRUD functions | 20 pts | [ ] Pending |
+| **Term Test** | Transactions CRUD API and jQuery frontend. Email notifications when updating transactions, including PDF receipts with order details | 40 (25 + 5 + 10) pts | [ ] Pending |
+| **Quiz 1** | jQuery validation for MP4 and MP5 | 15 pts | [ ] Pending |
+| **Quiz 2** | jQuery/API search/autocomplete on homepage | 15 pts | [ ] Pending |
+| **Quiz 3** | Route protection: middleware to check user's role (only Admin role can access CRUD API) | 15 pts | [x] Completed |
+| **Quiz 4** | Three (3) JS charts: Bar, Line, and Pie charts | 15 pts | [ ] Pending |
+| **Unit Test 1** | UI/UX Design | 20 pts | [x] Completed |
+| **Unit Test 2** | Custom jQuery pagination (15 pts) and infinite scroll (20 pts) — *Note: datatable pagination is not applicable* | 20 pts | [ ] Pending |
+| **Unit 3** | General Performance: Functional completeness (10), App complexity (10), Execution (10), Project contribution (10) | 40 pts | [/] Ongoing |
+
+---
+
+## 📦 Installation & Setup (Two-Repository Architecture)
+
+This project is organized into two separate repositories/folders within your local web server (e.g. `xampp/htdocs`):
+1. **Frontend Client**: `ProjectWebAppJs`
+2. **Backend REST API**: `ProjectWebAppNodeJS`
 
 ### Prerequisites
 - Node.js (v18+)
-- MySQL
+- MySQL / MariaDB (e.g., via XAMPP)
+- Apache Web Server (e.g., via XAMPP for serving the frontend)
 
-### Steps
+---
 
-1. **Clone the repository**
+### 1. Backend API Server Setup (`ProjectWebAppNodeJS`)
+
+1. **Navigate to the backend directory**
    ```bash
-   git clone https://github.com/your-username/little-mono.git
-   cd little-mono
+   cd c:/xampp/htdocs/ProjectWebAppNodeJS
    ```
 
-2. **Install dependencies**
+2. **Install Node.js dependencies**
    ```bash
    npm install
    ```
 
-3. **Configure environment variables**
-
-   Create a `.env` file in the root directory:
+3. **Configure Environment Variables**
+   Create a `.env` file inside the `ProjectWebAppNodeJS` folder:
    ```env
    PORT=3000
    DB_HOST=localhost
@@ -66,23 +97,32 @@ A full-stack web application for managing a Pop Mart figurine shop, featuring pr
    EMAIL_PASS=your_email_password
    ```
 
-4. **Set up the database**
+4. **Set up the Database Schema**
+   Import the schema into your local MySQL server:
    ```bash
-   mysql -u root -p < database/schema.sql
+   mysql -u root -p < schema.sql
    ```
 
-5. **Run the application**
+5. **Run the API Server**
    ```bash
-   # Development
-   npm run dev
-
-   # Production
-   npm start
+   # Start the API server
+   node index.js
    ```
 
-6. **Open in browser**
+---
+
+### 2. Frontend Client Setup (`ProjectWebAppJs`)
+
+1. **Deploy Frontend Files**
+   Ensure the `ProjectWebAppJs` folder is located in your local server's document root (e.g. `c:/xampp/htdocs/ProjectWebAppJs/`).
+
+2. **Launch via Web Server**
+   Start the Apache server in XAMPP Control Panel.
+   
+3. **Open in Web Browser**
+   Access the client application by navigating to:
    ```
-   http://localhost:3000
+   http://localhost/ProjectWebAppJs/index.html
    ```
 
 ---
@@ -148,22 +188,35 @@ A full-stack web application for managing a Pop Mart figurine shop, featuring pr
 
 ## 📁 Project Structure
 
+The project code is divided into two separate directories representing the frontend client and the backend server:
+
 ```
-little-mono/
-├── public/               # Static frontend files
+xampp/htdocs/
+├── ProjectWebAppJs/             # Frontend Repository (Client)
+│   ├── assets/                  # 3D models (GLB), images, and fonts
 │   ├── css/
+│   │   └── style.css            # Styling system
 │   ├── js/
-│   └── images/
-├── routes/               # Express route handlers
-├── controllers/          # Business logic
-├── models/               # Database queries
-├── middleware/           # Auth & role middleware
-├── uploads/              # Multer file uploads
-├── database/
-│   └── schema.sql        # MySQL schema
-├── .env                  # Environment variables (not committed)
-├── server.js             # Entry point
-└── package.json
+│   │   ├── auth.js              # Auth AJAX submissions
+│   │   ├── header-loader.js     # Shared header component loader
+│   │   └── script.js            # Homepage 3D scroll animations
+│   ├── header.html              # Shared navigation HTML component
+│   ├── index.html               # Main landing page
+│   ├── cart.html                # Cart page
+│   ├── dashboard.html           # Collector dashboard
+│   ├── profile.html             # Profile edit page
+│   └── register.html            # Registration form
+│
+└── ProjectWebAppNodeJS/         # Backend Repository (API Server)
+    ├── config/                  # Database connections / Sequelize config
+    ├── controllers/             # Request handling and business logic
+    ├── middlewares/             # JWT authenticators and route protection
+    ├── routes/                  # Express API routers
+    ├── utils/                   # Helper functions (email, PDF generation)
+    ├── schema.sql               # Database migration schema script
+    ├── .env                     # Local environment settings
+    ├── app.js                   # Express application configurations
+    └── index.js                 # API server bootloader
 ```
 
 ---

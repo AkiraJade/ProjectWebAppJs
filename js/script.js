@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSkew = 0;
 
     const body = document.body;
-    const header = document.getElementById('main-header');
+    // const header = document.getElementById('main-header'); // Query dynamically inside rendering loops
     const progressBar = document.getElementById('progressBar');
     const studioBg = document.getElementById('studioBg');
     const studioShadows = document.getElementById('studioShadows');
@@ -231,10 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4.1 Update Scroll-Dependent Elements (Only run when scrollPercent changes)
     function updateScrollScene(percent) {
         // --- Header Glassmorphic Transition ---
-        if (currentScrollY > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+        const headerEl = document.getElementById('main-header');
+        if (headerEl) {
+            if (currentScrollY > 50) {
+                headerEl.classList.add('scrolled');
+            } else {
+                headerEl.classList.remove('scrolled');
+            }
         }
 
         // --- Scroll Progress Bar ---
@@ -501,70 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 6.2 Session State Management & Navbar Update
-    const headerActions = document.querySelector('.header-actions');
 
-    function updateNavbarState() {
-        if (!headerActions) return;
-
-        const token = localStorage.getItem('token');
-        const userJson = localStorage.getItem('user');
-
-        if (token && userJson) {
-            try {
-                const user = JSON.parse(userJson);
-                // Create user profile menu HTML
-                headerActions.innerHTML = `
-                    <div class="user-profile-menu" id="userProfileMenu">
-                        <span class="user-welcome">Welcome, <strong id="navUserName">${escapeHTML(user.name)}</strong></span>
-                        <button class="btn-logout" id="logoutBtn">Sign Out</button>
-                    </div>
-                `;
-
-                // Wire up logout button
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', handleLogout);
-                }
-            } catch (err) {
-                console.error("Error parsing user from localStorage:", err);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                restoreDefaultNavbar();
-            }
-        } else {
-            restoreDefaultNavbar();
-        }
-    }
-
-    function restoreDefaultNavbar() {
-        headerActions.innerHTML = `
-            <a href="login.html" class="btn-login" id="loginRegisterBtn">Login / Register</a>
-        `;
-    }
-
-    function handleLogout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        updateNavbarState();
-        showToast("Signed out successfully.", "info");
-    }
-
-    // HTML escape utility to prevent XSS
-    function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g, 
-            tag => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            }[tag] || tag)
-        );
-    }
-
-    // Initialize the navbar profile state at startup
-    updateNavbarState();
 
     // Start rendering loops
     requestAnimationFrame(smoothScrollLoop);

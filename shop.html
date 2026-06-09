@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop — Little Mono</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ===== Shop Page Layout ===== */
+        .shop-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: calc(var(--header-height) + 30px) 1.5rem 4rem 1.5rem;
+        }
+
+        /* === Area 3: Top Search Bar === */
+        .shop-topbar {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197,168,128,0.15);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+        .shop-search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+        .shop-search-wrap input {
+            width: 100%;
+            padding: 0.75rem 1.2rem 0.75rem 2.6rem;
+            border-radius: 30px;
+            border: 1px solid rgba(197,168,128,0.35);
+            background: #ffffff;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+        }
+        .shop-search-wrap input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(197,168,128,0.12);
+        }
+        .shop-search-wrap .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+        #shopAutocompleteResults {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid rgba(197,168,128,0.25);
+            border-radius: 12px;
+            max-height: 260px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1010;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .shop-mode-btns {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .mode-btn {
+            font-family: var(--font-heading);
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 0.5rem 1.1rem;
+            border-radius: 25px;
+            border: 1px solid rgba(28,28,28,0.12);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .mode-btn.active {
+            background: var(--text-primary);
+            color: #fff;
+            border-color: var(--text-primary);
+        }
+        .mode-btn:hover:not(.active) {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold-dark);
+        }
+
+        /* === Main Content: Sidebar (1) + Grid (2) === */
+        .shop-body {
+            display: grid;
+            grid-template-columns: 230px 1fr;
+            gap: 1.2rem;
+            align-items: start;
+        }
+
+        /* === Area 1: Sidebar === */
+        .shop-sidebar {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197,168,128,0.15);
+            border-radius: 16px;
+            padding: 1.4rem;
+            position: sticky;
+            top: calc(var(--header-height) + 20px);
+        }
+        .sidebar-heading {
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.8rem;
+        }
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid rgba(197,168,128,0.12);
+            margin: 1rem 0;
+        }
+        .filter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .filter-item:hover, .filter-item.active {
+            background: rgba(245,239,230,0.5);
+        }
+        .filter-item.active {
+            color: var(--accent-gold-dark);
+            font-weight: 600;
+        }
+        .filter-item .filter-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-gold-light);
+            flex-shrink: 0;
+        }
+        .filter-item.active .filter-dot {
+            background: var(--accent-gold-dark);
+        }
+
+        /* Price filter */
+        .price-range-display {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .price-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(197,168,128,0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+        .price-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-gold-dark);
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        /* Availability pills */
+        .avail-toggle {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .avail-pill {
+            font-size: 0.78rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid rgba(197,168,128,0.25);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .avail-pill.active {
+            background: var(--text-primary);
+            color: #fff;
+            border-color: var(--text-primary);
+        }
+        .avail-pill:hover:not(.active) {
+            border-color: var(--accent-gold);
+        }
+
+        /* === Area 2: Product Grid === */
+        .shop-grid-area {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197,168,128,0.15);
+            border-radius: 16px;
+            padding: 1.4rem;
+            min-height: 400px;
+        }
+        .shop-grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+        .shop-grid-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .shop-grid-header .result-count {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        #shopGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.2rem;
+        }
+
+        #shopPagination {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 2rem;
+        }
+
+        #shopScrollLoader {
+            display: none;
+            padding: 1.5rem 0;
+            text-align: center;
+            font-family: var(--font-heading);
+            color: var(--accent-gold-dark);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .shop-body {
+                grid-template-columns: 1fr;
+            }
+            .shop-sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Dynamic Navigation Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="shop-wrapper">
+
+        <!-- ===== Area 3: Top Bar (Search + Mode Toggle) ===== -->
+        <div class="shop-topbar">
+            <div class="shop-search-wrap">
+                <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="shopSearchInput" placeholder="Search figurines...">
+                <div id="shopAutocompleteResults"></div>
+            </div>
+            <div class="shop-mode-btns">
+                <button id="modeInfiniteBtn" class="mode-btn active" onclick="setShopMode('infinite')">Infinite Scroll</button>
+                <button id="modePaginateBtn" class="mode-btn" onclick="setShopMode('paginate')">Pagination</button>
+            </div>
+        </div>
+
+        <!-- ===== Body: Sidebar (1) + Grid (2) ===== -->
+        <div class="shop-body">
+
+            <!-- === Area 1: Sidebar Categories === -->
+            <aside class="shop-sidebar">
+
+                <div class="sidebar-heading">Categories</div>
+                <div class="filter-list" id="categoryFilters">
+                    <button class="filter-item active" onclick="filterCategory('all', this)">
+                        <span class="filter-dot"></span> All Figurines
+                    </button>
+                    <button class="filter-item" onclick="filterCategory('hirono', this)">
+                        <span class="filter-dot"></span> Hirono Series
+                    </button>
+                    <button class="filter-item" onclick="filterCategory('limited', this)">
+                        <span class="filter-dot"></span> Limited Edition
+                    </button>
+                    <button class="filter-item" onclick="filterCategory('new', this)">
+                        <span class="filter-dot"></span> New Arrivals
+                    </button>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <div class="sidebar-heading">Price Range</div>
+                <div class="price-range-display">Up to: $<span id="priceDisplay">1000</span></div>
+                <input type="range" class="price-slider" id="priceSlider" min="0" max="1000" value="1000" oninput="filterByPrice(this.value)">
+
+                <hr class="sidebar-divider">
+
+                <div class="sidebar-heading">Availability</div>
+                <div class="avail-toggle">
+                    <button class="avail-pill active" onclick="filterAvailability('all', this)">All</button>
+                    <button class="avail-pill" onclick="filterAvailability('instock', this)">In Stock</button>
+                    <button class="avail-pill" onclick="filterAvailability('out', this)">Out of Stock</button>
+                </div>
+
+                <hr class="sidebar-divider">
+
+                <div class="sidebar-heading">Sort By</div>
+                <div class="filter-list">
+                    <button class="filter-item active" onclick="sortShop('default', this)">
+                        <span class="filter-dot"></span> Default
+                    </button>
+                    <button class="filter-item" onclick="sortShop('price-low', this)">
+                        <span class="filter-dot"></span> Price: Low → High
+                    </button>
+                    <button class="filter-item" onclick="sortShop('price-high', this)">
+                        <span class="filter-dot"></span> Price: High → Low
+                    </button>
+                    <button class="filter-item" onclick="sortShop('name', this)">
+                        <span class="filter-dot"></span> Name: A → Z
+                    </button>
+                </div>
+
+            </aside>
+
+            <!-- === Area 2: Product Grid === -->
+            <div class="shop-grid-area" id="shop">
+                <div class="shop-grid-header">
+                    <h2>All Figurines</h2>
+                    <span class="result-count" id="resultCount">Loading...</span>
+                </div>
+                <div id="shopGrid"></div>
+                <div id="shopPagination"></div>
+                <div id="shopScrollLoader">Loading more figurines...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Footer -->
+    <footer class="main-footer" id="mainFooter" style="margin-top: 40px;">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p class="credits-text">Credits to owner Orlanda and Navasca @2026.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#terms" class="footer-link">Terms</a>
+                <a href="#privacy" class="footer-link">Privacy</a>
+                <a href="#contact" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="js/header-loader.js"></script>
+    <script src="js/shop.js"></script>
+</body>
+</html>

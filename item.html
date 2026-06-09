@@ -3,82 +3,610 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hirono Hero Prince — Little Mono</title>
+    <title>Product — Little Mono</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <!-- Configure Meshopt Decoder for compressed GLB files -->
-    <script>
-      self.ModelViewerElement = self.ModelViewerElement || {};
-      self.ModelViewerElement.meshoptDecoderLocation = 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.21.0/meshopt_decoder.js';
-    </script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    <style>
+        .item-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: calc(var(--header-height) + 30px) 1.5rem 4rem 1.5rem;
+        }
+
+        /* Product Detail Card */
+        .product-detail {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197,168,128,0.15);
+            border-radius: 18px;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+        .product-image-box {
+            height: 420px;
+            background: rgba(245,239,230,0.4);
+            border-radius: 14px;
+            border: 1px solid rgba(197,168,128,0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .product-image-box img {
+            max-height: 90%;
+            max-width: 90%;
+            object-fit: contain;
+        }
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .product-info .brand-tag {
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            color: var(--accent-gold-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+        .product-info h1 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top: -0.3rem;
+        }
+        .product-price {
+            font-family: var(--font-heading);
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .product-desc {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+        .product-meta {
+            border-top: 1px solid rgba(197,168,128,0.12);
+            padding-top: 0.8rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .product-meta strong {
+            color: var(--accent-gold-dark);
+        }
+
+        /* Action buttons row */
+        .product-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .btn-add-cart {
+            flex: 1;
+            font-family: var(--font-heading);
+            font-size: 0.92rem;
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            background: var(--text-primary);
+            color: #fff;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            letter-spacing: 0.03em;
+        }
+        .btn-add-cart:hover { opacity: 0.85; }
+        .btn-wishlist {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1px solid rgba(197,168,128,0.25);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .btn-wishlist:hover {
+            border-color: var(--accent-gold);
+            background: rgba(245,239,230,0.4);
+        }
+        .btn-wishlist.wishlisted {
+            background: rgba(201,74,74,0.08);
+            border-color: rgba(201,74,74,0.25);
+        }
+        .btn-wishlist svg { transition: all 0.3s ease; }
+        .btn-wishlist.wishlisted svg {
+            fill: #c94a4a;
+            stroke: #c94a4a;
+        }
+
+        /* ===== Reviews Section ===== */
+        .reviews-section {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197,168,128,0.15);
+            border-radius: 18px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .reviews-section h2 {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .review-avg {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Star rating display */
+        .stars { display: inline-flex; gap: 2px; }
+        .stars .star {
+            color: rgba(197,168,128,0.25);
+            font-size: 1.1rem;
+        }
+        .stars .star.filled { color: #d4ac0d; }
+
+        /* Review card */
+        .review-card {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(197,168,128,0.08);
+        }
+        .review-card:last-child { border-bottom: none; }
+        .review-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+        }
+        .review-author {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        .review-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .review-text {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-top: 0.3rem;
+        }
+
+        /* Write review form */
+        .review-form {
+            background: rgba(245,239,230,0.25);
+            border: 1px dashed rgba(197,168,128,0.2);
+            border-radius: 14px;
+            padding: 1.4rem;
+            margin-top: 1.2rem;
+        }
+        .review-form h3 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .star-rating-input {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 0.8rem;
+        }
+        .star-rating-input .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: rgba(197,168,128,0.3);
+            cursor: pointer;
+            transition: color 0.15s ease;
+            padding: 0;
+        }
+        .star-rating-input .star-btn.selected {
+            color: #d4ac0d;
+        }
+        .star-rating-input .star-btn:hover {
+            color: #d4ac0d;
+        }
+        .review-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(197,168,128,0.25);
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            resize: vertical;
+            outline: none;
+            transition: border 0.3s ease;
+            background: #fff;
+            margin-bottom: 0.8rem;
+        }
+        .review-textarea:focus {
+            border-color: var(--accent-gold);
+        }
+        .btn-submit-review {
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.55rem 1.5rem;
+            border-radius: 25px;
+            border: none;
+            background: var(--text-primary);
+            color: #fff;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        .btn-submit-review:hover { opacity: 0.85; }
+        .btn-submit-review:disabled { opacity: 0.4; cursor: default; }
+
+        .review-locked-msg {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border: 1px dashed rgba(197,168,128,0.15);
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .product-detail { grid-template-columns: 1fr; }
+            .product-image-box { height: 300px; }
+        }
+    </style>
 </head>
 <body>
-    <header class="main-header">
-        <div class="logo" onclick="window.location.href='index.html'">
-            <span class="brand-name">LITTLE MONO</span>
-            <span class="sub-brand">DESIGNER TOYS</span>
-        </div>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="cart.html" class="nav-link">Cart</a>
-            <a href="dashboard.html" class="nav-link">Dashboard</a>
-            <a href="profile.html" class="nav-link">Profile</a>
-        </nav>
-        <div class="header-actions">
-            <a href="login.html" class="btn-login" id="loginRegisterBtn">Login / Register</a>
-        </div>
-    </header>
+    <!-- Dynamic Navigation Header -->
+    <div id="header-placeholder"></div>
 
-    <div class="auth-page-container" style="padding-top: 120px; display: flex; flex-direction: column; height: auto;">
-        <div class="auth-card" style="max-width: 900px; width: 95%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; align-items: center;">
-            <div style="height: 400px; background-color: rgba(245, 239, 230, 0.4); border-radius: 16px; border: 1px solid rgba(197, 168, 128, 0.2); position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center;">
-                <model-viewer style="width: 100%; height: 100%;" src="assets/PrinceCenter.glb" alt="Hirono Hero Prince" camera-controls shadow-intensity="1" shadow-softness="0.8" environment-image="neutral" exposure="1.1" disable-zoom></model-viewer>
+    <div class="item-wrapper">
+
+        <!-- Product Detail -->
+        <div class="product-detail">
+            <div class="product-image-box" id="productImageBox">
+                <img id="productImage" src="assets/toy_placeholder.png" alt="product">
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
-                <div>
-                    <span style="font-family: var(--font-heading); font-size: 0.85rem; color: var(--accent-gold-dark); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Authentic Pop Mart</span>
-                    <h2 style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--text-primary); margin-top: 0.2rem;">Hirono Hero Prince</h2>
+            <div class="product-info">
+                <span class="brand-tag">Authentic Pop Mart</span>
+                <h1 id="productName">Loading...</h1>
+                <span class="product-price" id="productPrice">$0.00</span>
+                <p class="product-desc" id="productDesc">Loading product details...</p>
+                <div class="product-meta">
+                    Availability: <strong id="productAvailability">—</strong>
                 </div>
-                
-                <span style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">$599.00</span>
-                
-                <p style="font-family: var(--font-body); font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
-                    The Hirono Hero Prince designer toy encapsulates raw emotion and vulnerability, crafted with pristine, hand-painted details. Direct from Pop Mart, 100% authentic and rare.
-                </p>
-                
-                <div style="border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Availability: <strong style="color: var(--accent-gold-dark);">In Stock (15 units)</strong></span>
+                <div class="product-actions">
+                    <button class="btn-add-cart" id="addToCartBtn" onclick="addToCart()">Add to Cart</button>
+                    <button class="btn-wishlist" id="wishlistBtn" onclick="toggleWishlist()" title="Add to Wishlist">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
                 </div>
-                
-                <button class="btn-auth-submit" onclick="window.location.href='cart.html'">Add to Cart</button>
             </div>
         </div>
-        
-        <div class="auth-back-link" style="margin-top: 2rem;">
-            <a href="index.html">
+
+        <!-- Reviews Section -->
+        <div class="reviews-section">
+            <h2>
+                Customer Reviews
+                <span class="review-avg" id="reviewAvg"></span>
+            </h2>
+            <div id="reviewsList">
+                <div style="text-align: center; padding: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">Loading reviews...</div>
+            </div>
+            <div id="reviewFormArea"></div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="auth-back-link" style="text-align: center; margin-top: 1rem;">
+            <a href="shop.html">
                 <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
                     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
-                <span style="vertical-align: middle;">Back to Home</span>
+                <span style="vertical-align: middle;">Back to Shop</span>
             </a>
         </div>
+
     </div>
+
+    <!-- Footer -->
+    <footer class="main-footer" id="mainFooter" style="margin-top: 20px;">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p class="credits-text">Credits to owner Orlanda and Navasca @2026.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#terms" class="footer-link">Terms</a>
+                <a href="#privacy" class="footer-link">Privacy</a>
+                <a href="#contact" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="js/header-loader.js"></script>
+
     <script>
+        const API_URL = 'http://localhost:3000/api/v1';
+        const params = new URLSearchParams(window.location.search);
+        const itemId = params.get('id');
         const token = localStorage.getItem('token');
-        const userJson = localStorage.getItem('user');
-        if (token && userJson) {
-            const user = JSON.parse(userJson);
-            document.querySelector('.header-actions').innerHTML = `
-                <div class="user-profile-menu">
-                    <span class="user-welcome">Welcome, <strong>${user.name}</strong></span>
-                    <button class="btn-logout" onclick="localStorage.clear(); window.location.reload();">Sign Out</button>
-                </div>
-            `;
+        let currentItem = null;
+
+        if (!itemId) {
+            window.location.href = 'shop.html';
         }
+
+        // ===== Load Product Detail =====
+        function loadProduct() {
+            $.ajax({
+                url: `${API_URL}/items/${itemId}`,
+                type: 'GET',
+                success: function(res) {
+                    if (res.success && res.result.length > 0) {
+                        currentItem = res.result[0];
+                        const item = currentItem;
+                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : 'assets/toy_placeholder.png';
+
+                        document.title = `${item.description} — Little Mono`;
+                        $('#productName').text(item.description);
+                        $('#productPrice').text('$' + parseFloat(item.sell_price).toFixed(2));
+                        $('#productImage').attr('src', img).attr('alt', item.description);
+                        $('#productDesc').text(`The ${item.description} designer toy encapsulates raw emotion and vulnerability, crafted with pristine, hand-painted details. Direct from Pop Mart, 100% authentic and rare.`);
+
+                        const qty = item.quantity || 0;
+                        if (qty > 0) {
+                            $('#productAvailability').css('color', 'var(--accent-gold-dark)').text(`In Stock (${qty} units)`);
+                        } else {
+                            $('#productAvailability').css('color', '#c94a4a').text('Out of Stock');
+                            $('#addToCartBtn').prop('disabled', true).css('opacity', '0.4').text('Out of Stock');
+                        }
+
+                        // Load reviews and wishlist state
+                        loadReviews();
+                        checkWishlistState();
+                    }
+                },
+                error: function() {
+                    $('#productName').text('Product Not Found');
+                }
+            });
+        }
+
+        // ===== Add to Cart =====
+        window.addToCart = function() {
+            if (!token) {
+                alert('Please sign in first to add items to your cart.');
+                window.location.href = 'login.html';
+                return;
+            }
+            // Simple localStorage cart
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const existing = cart.find(c => c.item_id == itemId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ item_id: parseInt(itemId), quantity: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            $('#addToCartBtn').text('✓ Added to Cart');
+            setTimeout(() => $('#addToCartBtn').text('Add to Cart'), 2000);
+        };
+
+        // ===== Wishlist =====
+        function checkWishlistState() {
+            if (!token) return;
+            $.ajax({
+                url: `${API_URL}/wishlist/${itemId}/check`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(res) {
+                    if (res.wishlisted) {
+                        $('#wishlistBtn').addClass('wishlisted').attr('title', 'Remove from Wishlist');
+                    }
+                }
+            });
+        }
+
+        window.toggleWishlist = function() {
+            if (!token) {
+                alert('Please sign in first to use your wishlist.');
+                window.location.href = 'login.html';
+                return;
+            }
+            $.ajax({
+                url: `${API_URL}/wishlist/${itemId}/toggle`,
+                type: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                contentType: 'application/json',
+                success: function(res) {
+                    if (res.success) {
+                        if (res.wishlisted) {
+                            $('#wishlistBtn').addClass('wishlisted').attr('title', 'Remove from Wishlist');
+                        } else {
+                            $('#wishlistBtn').removeClass('wishlisted').attr('title', 'Add to Wishlist');
+                        }
+                    }
+                }
+            });
+        };
+
+        // ===== Reviews =====
+        function renderStars(rating, size) {
+            let html = '<span class="stars">';
+            for (let i = 1; i <= 5; i++) {
+                html += `<span class="star ${i <= rating ? 'filled' : ''}">★</span>`;
+            }
+            html += '</span>';
+            return html;
+        }
+
+        function loadReviews() {
+            $.ajax({
+                url: `${API_URL}/reviews/${itemId}`,
+                type: 'GET',
+                success: function(res) {
+                    const reviews = res.reviews || [];
+                    const container = $('#reviewsList');
+                    container.empty();
+
+                    if (reviews.length === 0) {
+                        container.html('<div style="text-align: center; padding: 1.5rem; color: var(--text-secondary); font-size: 0.88rem;">No reviews yet. Be the first to review this figurine!</div>');
+                        $('#reviewAvg').text('');
+                    } else {
+                        // Calculate average
+                        const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                        $('#reviewAvg').html(`${renderStars(Math.round(avg))} ${avg.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? 's' : ''})`);
+
+                        reviews.forEach(r => {
+                            const date = new Date(r.created_at).toLocaleDateString(undefined, {
+                                year: 'numeric', month: 'short', day: 'numeric'
+                            });
+                            container.append(`
+                                <div class="review-card">
+                                    <div class="review-card-header">
+                                        <div>
+                                            <span class="review-author">${escapeHTML(r.user ? r.user.name : 'Anonymous')}</span>
+                                            <div style="margin-top: 2px;">${renderStars(r.rating)}</div>
+                                        </div>
+                                        <span class="review-date">${date}</span>
+                                    </div>
+                                    ${r.comment ? `<p class="review-text">${escapeHTML(r.comment)}</p>` : ''}
+                                </div>
+                            `);
+                        });
+                    }
+
+                    // Check if user can write a review
+                    if (token) {
+                        checkCanReview();
+                    } else {
+                        $('#reviewFormArea').html(`
+                            <div class="review-locked-msg">
+                                <a href="login.html" style="color: var(--accent-gold-dark); font-weight: 600; text-decoration: none;">Sign in</a> to leave a review
+                            </div>
+                        `);
+                    }
+                }
+            });
+        }
+
+        function checkCanReview() {
+            $.ajax({
+                url: `${API_URL}/reviews/${itemId}/can-review`,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(res) {
+                    const area = $('#reviewFormArea');
+                    area.empty();
+
+                    if (res.hasReviewed) {
+                        area.html('<div class="review-locked-msg">✓ You have already reviewed this item</div>');
+                    } else if (res.canReview) {
+                        // Show review form
+                        area.html(`
+                            <div class="review-form">
+                                <h3>Write a Review</h3>
+                                <div class="star-rating-input" id="starRatingInput">
+                                    <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+                                    <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+                                    <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+                                    <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+                                    <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
+                                </div>
+                                <textarea class="review-textarea" id="reviewComment" placeholder="Share your thoughts about this figurine (optional)..."></textarea>
+                                <button class="btn-submit-review" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
+                            </div>
+                        `);
+                    } else {
+                        area.html(`
+                            <div class="review-locked-msg">
+                                🔒 Reviews are available after you receive this item in an order
+                            </div>
+                        `);
+                    }
+                }
+            });
+        }
+
+        let selectedRating = 0;
+
+        window.setRating = function(val) {
+            selectedRating = val;
+            $('#starRatingInput .star-btn').each(function() {
+                const v = parseInt($(this).data('val'));
+                if (v <= val) {
+                    $(this).addClass('selected');
+                } else {
+                    $(this).removeClass('selected');
+                }
+            });
+        };
+
+        window.submitReview = function() {
+            if (selectedRating === 0) {
+                alert('Please select a star rating.');
+                return;
+            }
+
+            const comment = $('#reviewComment').val().trim();
+            const btn = $('#submitReviewBtn');
+            btn.prop('disabled', true).text('Submitting...');
+
+            $.ajax({
+                url: `${API_URL}/reviews/${itemId}`,
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({ rating: selectedRating, comment }),
+                success: function(res) {
+                    if (res.success) {
+                        loadReviews(); // Reload reviews list
+                    } else {
+                        alert(res.error || 'Failed to submit review.');
+                        btn.prop('disabled', false).text('Submit Review');
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON ? xhr.responseJSON.error : 'Failed to submit review.';
+                    alert(msg);
+                    btn.prop('disabled', false).text('Submit Review');
+                }
+            });
+        };
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        // Init
+        loadProduct();
     </script>
 </body>
 </html>

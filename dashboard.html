@@ -8,75 +8,618 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ===== Dashboard Layout ===== */
+        .dash-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: calc(var(--header-height) + 30px) 1.5rem 4rem 1.5rem;
+        }
+
+        /* Welcome Banner */
+        .dash-welcome {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(197, 168, 128, 0.18) 100%);
+            border: 1px solid rgba(197, 168, 128, 0.2);
+            border-radius: 18px;
+            padding: 2.2rem 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-welcome::after {
+            content: '✦';
+            position: absolute;
+            top: 18px;
+            right: 28px;
+            font-size: 2rem;
+            opacity: 0.18;
+            color: var(--accent-gold);
+        }
+        .dash-welcome h1 {
+            font-family: var(--font-heading);
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        .dash-welcome p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .dash-welcome-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.2rem;
+        }
+        .dash-btn {
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 0.55rem 1.4rem;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dash-btn.primary {
+            background: var(--text-primary);
+            color: #fff;
+        }
+        .dash-btn.primary:hover { opacity: 0.85; }
+        .dash-btn.outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid rgba(28,28,28,0.15);
+        }
+        .dash-btn.outline:hover { border-color: var(--accent-gold); color: var(--accent-gold-dark); }
+
+        /* Stats Row */
+        .dash-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255, 0.55);
+            border: 1px solid rgba(197, 168, 128, 0.15);
+            border-radius: 14px;
+            padding: 1.3rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .stat-card .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-card .stat-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .stat-card .stat-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .stat-card .stat-value {
+            font-family: var(--font-heading);
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .stat-card .stat-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Section Grid: 2 columns */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Panels */
+        .dash-panel {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197, 168, 128, 0.15);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .dash-panel h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        .dash-panel .view-all {
+            float: right;
+            font-size: 0.8rem;
+            color: var(--accent-gold-dark);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .dash-panel .view-all:hover { text-decoration: underline; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+        }
+        .empty-state svg {
+            margin-bottom: 0.6rem;
+            color: var(--accent-gold);
+        }
+        .empty-state .empty-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+            font-size: 0.95rem;
+        }
+        .empty-state p {
+            font-size: 0.82rem;
+            margin-bottom: 1rem;
+        }
+        .empty-state .dash-btn {
+            font-size: 0.8rem;
+            padding: 0.5rem 1.3rem;
+        }
+
+        /* Account links list */
+        .account-link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .account-link-item {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+        .account-link-item:hover {
+            background: rgba(245, 239, 230, 0.5);
+        }
+        .account-link-item .link-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+        .account-link-item .link-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .account-link-item .link-text strong {
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .account-link-item .link-text span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Loyalty card */
+        .loyalty-card {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(197, 168, 128, 0.22) 100%);
+            border: 1px solid rgba(197, 168, 128, 0.25);
+            border-radius: 14px;
+            padding: 1.4rem;
+        }
+        .loyalty-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+        .loyalty-card p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+        .loyalty-card .loyalty-points-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-top: 1px solid rgba(197, 168, 128, 0.15);
+            border-bottom: 1px solid rgba(197, 168, 128, 0.15);
+            margin-bottom: 0.8rem;
+        }
+        .loyalty-card .loyalty-points-row span {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        .loyalty-card .loyalty-points-row strong {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            color: var(--accent-gold-dark);
+        }
+        .loyalty-card .dash-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Recently Viewed */
+        .recently-viewed-grid {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Need Help Section */
+        .help-section {
+            margin-bottom: 1.5rem;
+        }
+        .help-section h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        .help-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        .help-card {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(197, 168, 128, 0.15);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .help-card:hover {
+            border-color: var(--accent-gold);
+            box-shadow: 0 4px 16px rgba(197, 168, 128, 0.1);
+        }
+        .help-card .help-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+        .help-card .help-text strong {
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+        .help-card .help-text span {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .status-badge.pending { background: rgba(212,172,13,0.12); color: #b78700; }
+        .status-badge.completed, .status-badge.paid, .status-badge.shipped { background: rgba(46,125,50,0.12); color: #2e7d32; }
+        .status-badge.cancelled { background: rgba(201,74,74,0.12); color: #c94a4a; }
+
+        /* Scrollbar */
+        #ordersContainer::-webkit-scrollbar { width: 5px; }
+        #ordersContainer::-webkit-scrollbar-track { background: transparent; }
+        #ordersContainer::-webkit-scrollbar-thumb { background: rgba(197,168,128,0.2); border-radius: 10px; }
+        #ordersContainer::-webkit-scrollbar-thumb:hover { background: rgba(197,168,128,0.35); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dash-stats { grid-template-columns: repeat(2, 1fr); }
+            .dash-grid { grid-template-columns: 1fr; }
+            .help-cards { grid-template-columns: 1fr; }
+            .dash-welcome h1 { font-size: 1.3rem; }
+        }
+        @media (max-width: 480px) {
+            .dash-stats { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-    <header class="main-header">
-        <div class="logo" onclick="window.location.href='index.html'">
-            <span class="brand-name">LITTLE MONO</span>
-            <span class="sub-brand">DESIGNER TOYS</span>
-        </div>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-link">Home</a>
-            <a href="cart.html" class="nav-link">Cart</a>
-            <a href="dashboard.html" class="nav-link active">Dashboard</a>
-            <a href="profile.html" class="nav-link">Profile</a>
-        </nav>
-        <div class="header-actions">
-            <a href="login.html" class="btn-login" id="loginRegisterBtn">Login / Register</a>
-        </div>
-    </header>
+    <!-- Dynamic Navigation Header -->
+    <div id="header-placeholder"></div>
 
-    <div class="auth-page-container" style="padding-top: 120px;">
-        <div class="auth-card" style="max-width: 800px; width: 95%;">
-            <h2 class="auth-title">Collector Dashboard</h2>
-            <p class="auth-subtitle">Overview of your activity and unboxed collections</p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-                <div style="background-color: rgba(245, 239, 230, 0.4); border: 1px solid rgba(197, 168, 128, 0.2); padding: 1.5rem; border-radius: 12px; text-align: center;">
-                    <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Total Orders</span>
-                    <h3 style="font-family: var(--font-heading); font-size: 2rem; color: var(--text-primary); margin-top: 0.5rem;">0</h3>
+    <div class="dash-wrapper">
+
+        <!-- ===== Welcome Banner ===== -->
+        <div class="dash-welcome">
+            <h1 id="welcomeTitle">Welcome back! ✨</h1>
+            <p>Your personalized collector dashboard</p>
+            <div class="dash-welcome-actions">
+                <button class="dash-btn primary" onclick="window.location.href='shop.html'">Continue Shopping</button>
+                <button class="dash-btn outline" onclick="window.location.href='profile.html'">Edit Profile</button>
+            </div>
+        </div>
+
+        <!-- ===== Stats Row (4 cards) ===== -->
+        <div class="dash-stats">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Orders</span>
+                    <div class="stat-icon" style="background: rgba(197,168,128,0.12);">📦</div>
                 </div>
-                <div style="background-color: rgba(245, 239, 230, 0.4); border: 1px solid rgba(197, 168, 128, 0.2); padding: 1.5rem; border-radius: 12px; text-align: center;">
-                    <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Loyalty Points</span>
-                    <h3 style="font-family: var(--font-heading); font-size: 2rem; color: var(--accent-gold-dark); margin-top: 0.5rem;">150</h3>
+                <span class="stat-value" id="statTotalOrders">0</span>
+                <span class="stat-sub">View order history</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Amount Spent</span>
+                    <div class="stat-icon" style="background: rgba(166,139,99,0.12);">💰</div>
                 </div>
-                <div style="background-color: rgba(245, 239, 230, 0.4); border: 1px solid rgba(197, 168, 128, 0.2); padding: 1.5rem; border-radius: 12px; text-align: center;">
-                    <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Collection Rank</span>
-                    <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--text-primary); margin-top: 0.8rem;">Novice</h3>
+                <span class="stat-value" id="statAmountSpent">$0</span>
+                <span class="stat-sub">Lifetime value</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Loyalty Points</span>
+                    <div class="stat-icon" style="background: rgba(197,168,128,0.12);">⭐</div>
+                </div>
+                <span class="stat-value" id="statLoyaltyPoints">0</span>
+                <span class="stat-sub">Redeem rewards</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Collection Rank</span>
+                    <div class="stat-icon" style="background: rgba(166,139,99,0.12);">🏆</div>
+                </div>
+                <span class="stat-value" id="statCollectionRank" style="font-size: 1.3rem;">Novice</span>
+                <span class="stat-sub">Your tier</span>
+            </div>
+        </div>
+
+        <!-- ===== Row: Recent Orders + Account ===== -->
+        <div class="dash-grid">
+            <!-- Recent Orders -->
+            <div class="dash-panel">
+                <h3>Recent Orders <a href="#" class="view-all">View All</a></h3>
+                <div id="ordersContainer" style="display: flex; flex-direction: column; gap: 0.8rem; max-height: 320px; overflow-y: auto; padding-right: 6px;">
+                    <div class="empty-state">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">Loading...</div>
+                    </div>
                 </div>
             </div>
-            
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn-auth-submit" style="flex: 1;" onclick="window.location.href='profile.html'">Edit Profile</button>
-                <button class="btn-auth-submit" style="flex: 1; background-color: transparent; border: 1px solid rgba(28,28,28,0.15); color: var(--text-primary);" onclick="window.location.href='deactivate.html'">Deactivate Account</button>
+
+            <!-- Account Panel -->
+            <div class="dash-panel" style="padding: 1.2rem;">
+                <h3>Account</h3>
+                <div class="account-link-list">
+                    <a href="profile.html" class="account-link-item">
+                        <div class="link-icon" style="background: rgba(197,168,128,0.12);">👤</div>
+                        <div class="link-text">
+                            <strong>Profile</strong>
+                            <span>Edit your information</span>
+                        </div>
+                    </a>
+                    <a href="profile.html" class="account-link-item">
+                        <div class="link-icon" style="background: rgba(197,168,128,0.12);">🔒</div>
+                        <div class="link-text">
+                            <strong>Password</strong>
+                            <span>Change password</span>
+                        </div>
+                    </a>
+                    <a href="profile.html" class="account-link-item">
+                        <div class="link-icon" style="background: rgba(197,168,128,0.12);">📍</div>
+                        <div class="link-text">
+                            <strong>Addresses</strong>
+                            <span>Manage addresses</span>
+                        </div>
+                    </a>
+                    <a href="deactivate.html" class="account-link-item">
+                        <div class="link-icon" style="background: rgba(201,74,74,0.08);">⚙️</div>
+                        <div class="link-text">
+                            <strong>Settings</strong>
+                            <span>Deactivation & privacy</span>
+                        </div>
+                    </a>
+                </div>
             </div>
-            
-            <div class="auth-back-link">
-                <a href="index.html">
-                    <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
-                        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+        </div>
+
+        <!-- ===== Row: Wishlist + Loyalty Program ===== -->
+        <div class="dash-grid">
+            <!-- Wishlist -->
+            <div class="dash-panel">
+                <h3>My Wishlist <a href="shop.html" class="view-all">View All</a></h3>
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                     </svg>
-                    <span style="vertical-align: middle;">Back to Home</span>
+                    <div class="empty-title">No items in wishlist</div>
+                    <p>Save your favorite products for later</p>
+                    <button class="dash-btn primary" onclick="window.location.href='shop.html'">Explore Products</button>
+                </div>
+            </div>
+
+            <!-- Loyalty Program -->
+            <div class="loyalty-card">
+                <h3>Loyalty Program</h3>
+                <p>Earn points on every purchase and redeem for exclusive collector rewards!</p>
+                <div class="loyalty-points-row">
+                    <span>Your Points</span>
+                    <strong id="loyaltyPointsDisplay">0</strong>
+                </div>
+                <button class="dash-btn outline" style="width: 100%; text-align: center;">Learn More</button>
+            </div>
+        </div>
+
+        <!-- ===== Recently Viewed ===== -->
+        <div class="dash-panel" style="margin-bottom: 1.5rem;">
+            <h3>Recently Viewed</h3>
+            <div class="empty-state" style="padding: 1.2rem;">
+                <p style="margin-bottom: 0;">No items viewed yet</p>
+            </div>
+        </div>
+
+        <!-- ===== Need Help ===== -->
+        <div class="help-section">
+            <h3>Need Help?</h3>
+            <div class="help-cards">
+                <a href="mailto:support@littlemono.com" class="help-card">
+                    <div class="help-icon" style="background: rgba(197,168,128,0.12);">💬</div>
+                    <div class="help-text">
+                        <strong>Contact Support</strong>
+                        <span>Response within 24 hours</span>
+                    </div>
+                </a>
+                <a href="#" class="help-card">
+                    <div class="help-icon" style="background: rgba(197,168,128,0.12);">📖</div>
+                    <div class="help-text">
+                        <strong>Knowledge Base</strong>
+                        <span>FAQs and guides</span>
+                    </div>
+                </a>
+                <a href="#" class="help-card">
+                    <div class="help-icon" style="background: rgba(197,168,128,0.12);">🗨️</div>
+                    <div class="help-text">
+                        <strong>Live Chat</strong>
+                        <span>Chat with our team</span>
+                    </div>
                 </a>
             </div>
         </div>
+
     </div>
+
+    <!-- Minimalist Footer -->
+    <footer class="main-footer" id="mainFooter" style="margin-top: 0;">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p class="credits-text">Credits to owner Orlanda and Navasca @2026.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#terms" class="footer-link">Terms</a>
+                <a href="#privacy" class="footer-link">Privacy</a>
+                <a href="#contact" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="js/header-loader.js"></script>
+
     <script>
-        const token = localStorage.getItem('token');
-        const userJson = localStorage.getItem('user');
-        if (token && userJson) {
-            const user = JSON.parse(userJson);
-            document.querySelector('.header-actions').innerHTML = `
-                <div class="user-profile-menu">
-                    <span class="user-welcome">Welcome, <strong>${user.name}</strong></span>
-                    <button class="btn-logout" onclick="localStorage.clear(); window.location.href='index.html';">Sign Out</button>
-                </div>
-            `;
-        } else {
-            // Guard dashboard page from unauthorized users
-            alert("Please sign in to view dashboard.");
-            window.location.href = "login.html";
-        }
+        $(document).ready(function() {
+            const token = localStorage.getItem('token');
+            const userJson = localStorage.getItem('user');
+
+            if (!token) return;
+
+            // Personalize welcome
+            if (userJson) {
+                try {
+                    const user = JSON.parse(userJson);
+                    $('#welcomeTitle').text(`Welcome back, ${user.name}! ✨`);
+                } catch(e) {}
+            }
+
+            $.ajax({
+                url: 'http://localhost:3000/api/v1/my-orders',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(response) {
+                    if (!response.success) return;
+
+                    const stats = response.stats;
+                    $('#statTotalOrders').text(stats.totalOrders);
+                    $('#statLoyaltyPoints').text(stats.loyaltyPoints);
+                    $('#loyaltyPointsDisplay').text(stats.loyaltyPoints);
+                    $('#statCollectionRank').text(stats.collectionRank);
+                    $('#statAmountSpent').text('$' + parseFloat(stats.totalSpent || 0).toFixed(0));
+
+                    // Render orders
+                    const container = $('#ordersContainer');
+                    container.empty();
+                    const orders = response.orders || [];
+
+                    if (orders.length === 0) {
+                        container.html(`
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <div class="empty-title">No orders yet</div>
+                                <p>Start your collector journey today!</p>
+                                <button class="dash-btn primary" onclick="window.location.href='shop.html'">Shop Now</button>
+                            </div>
+                        `);
+                        return;
+                    }
+
+                    orders.forEach(order => {
+                        const dateFormatted = new Date(order.date_placed).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                        });
+                        const firstItem = order.items[0] || {};
+                        const img = firstItem.img_path ? `http://localhost:3000/${firstItem.img_path}` : 'assets/toy_placeholder.png';
+                        const extraCount = order.items.length > 1 ? ` +${order.items.length - 1} more` : '';
+
+                        container.append(`
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.8rem; background: rgba(245,239,230,0.2); border: 1px solid rgba(197,168,128,0.08); border-radius: 10px; gap: 0.8rem;">
+                                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                                    <img src="${img}" style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.12); object-fit: contain; background: #fff; flex-shrink: 0;" alt="item">
+                                    <div style="min-width: 0;">
+                                        <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Order #${order.order_id}${extraCount}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${dateFormatted}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary);">$${parseFloat(order.amount).toFixed(2)}</span>
+                                    <span class="status-badge ${order.status.toLowerCase()}">${order.status}</span>
+                                </div>
+                            </div>
+                        `);
+                    });
+                },
+                error: function(err) {
+                    console.error("Dashboard load error:", err);
+                    $('#ordersContainer').html('<div class="empty-state"><p style="color:#c94a4a;">Error loading data. Ensure server is running.</p></div>');
+                }
+            });
+        });
     </script>
 </body>
 </html>
