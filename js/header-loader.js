@@ -1,14 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
-    loadHeader();
+    // Compute basePath: pages in subfolders (admin/, customer/) need "../" prefix
+    function getBasePath() {
+        const path = window.location.pathname;
+        // Check if current page is inside a subfolder like /admin/ or /customer/
+        if (path.match(/\/(admin|customer)\//i)) {
+            return '../';
+        }
+        return '';
+    }
+
+    const basePath = getBasePath();
 
     async function loadHeader() {
         const placeholder = document.getElementById('header-placeholder');
         if (!placeholder) return;
         
         try {
-            const response = await fetch('header.html?v=' + Date.now(), { cache: 'no-cache' });
+            const response = await fetch(basePath + 'header.html?v=' + Date.now(), { cache: 'no-cache' });
             if (!response.ok) throw new Error("Header fetch failed");
-            const html = await response.text();
+            let html = await response.text();
+
+            // Rewrite header links to use correct base path
+            html = html.replace(/href="([^"#][^"]*)"/g, (match, href) => {
+                // Skip absolute URLs and anchors
+                if (href.startsWith('http') || href.startsWith('#') || href.startsWith('//')) return match;
+                // Already has basePath prefix? skip
+                if (href.startsWith('../')) return match;
+                return `href="${basePath}${href}"`;
+            });
+
             placeholder.innerHTML = html;
             
             // Set active class on navbar links depending on current page URL
@@ -24,11 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function highlightActiveLink() {
         const path = window.location.pathname;
         const page = path.split("/").pop() || "index.html";
+        // Also consider subfolder context
+        const pathLower = path.toLowerCase();
         
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             const href = link.getAttribute('href');
-            if (href === page) {
+            // Match by filename regardless of folder prefix
+            const linkPage = href.split("/").pop();
+            if (linkPage === page) {
                 link.classList.add('active');
             } else {
                 link.classList.remove('active');
@@ -50,10 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Show Admin link for administrators
                 if (user.role === 'admin') {
                     const navLinks = document.querySelector('.nav-links');
-                    if (navLinks && !document.querySelector('a[href="admin.html"]')) {
+                    if (navLinks && !document.querySelector('.nav-link-admin')) {
                         const adminLink = document.createElement('a');
-                        adminLink.href = 'admin.html';
-                        adminLink.className = 'nav-link';
+                        adminLink.href = basePath + 'admin/admin.html';
+                        adminLink.className = 'nav-link nav-link-admin';
                         adminLink.innerText = 'Admin';
                         navLinks.appendChild(adminLink);
                         highlightActiveLink(); // refresh highlights
@@ -62,14 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 headerActions.innerHTML = `
                     <div class="user-profile-menu" id="userProfileMenu" style="display: flex; align-items: center; gap: 1.2rem;">
-                        <a href="cart.html" class="icon-nav-link" title="View Cart" style="color: var(--text-primary); display: inline-flex; align-items: center; transition: color 0.3s ease, transform 0.3s ease;">
+                        <a href="${basePath}customer/cart.html" class="icon-nav-link" title="View Cart" style="color: var(--text-primary); display: inline-flex; align-items: center; transition: color 0.3s ease, transform 0.3s ease;">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>
                                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                             </svg>
                         </a>
-                        <a href="profile.html" class="icon-nav-link" title="View Profile" style="color: var(--text-primary); display: inline-flex; align-items: center; transition: color 0.3s ease, transform 0.3s ease;">
+                        <a href="${basePath}customer/profile.html" class="icon-nav-link" title="View Profile" style="color: var(--text-primary); display: inline-flex; align-items: center; transition: color 0.3s ease, transform 0.3s ease;">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
@@ -85,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     logoutBtn.addEventListener('click', () => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
-                        window.location.href = 'index.html';
+                        window.location.href = basePath + 'index.html';
                     });
                 }
             } catch (err) {
@@ -96,23 +120,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Guard check for protected pages
-        const protectedPages = ['dashboard.html', 'profile.html', 'deactivate.html', 'admin.html'];
+        const protectedPages = ['dashboard.html', 'profile.html', 'deactivate.html', 'admin.html', 'cart.html', 'item.html'];
         const path = window.location.pathname;
         const page = path.split("/").pop();
         if (protectedPages.includes(page)) {
             if (!token || !userJson) {
                 alert("Unauthorized. Please sign in first.");
-                window.location.href = 'login.html';
+                window.location.href = basePath + 'login.html';
                 return;
             }
             try {
                 const user = JSON.parse(userJson);
                 if (page === 'admin.html' && user.role !== 'admin') {
                     alert("Forbidden. Administrators only.");
-                    window.location.href = 'index.html';
+                    window.location.href = basePath + 'index.html';
                 }
             } catch (err) {
-                window.location.href = 'login.html';
+                window.location.href = basePath + 'login.html';
             }
         }
     }
@@ -128,4 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }[tag] || tag)
         );
     }
+
+    // Call loadHeader after all functions and variables are defined
+    loadHeader();
 });

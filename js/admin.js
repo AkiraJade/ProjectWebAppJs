@@ -60,7 +60,7 @@ $(document).ready(function () {
             { 
                 data: 'role',
                 render: (data, type, row) => `
-                    <select class="admin-select" onchange="updateUserRole(${row.id}, this.value)">
+                    <select class="admin-select" id="role-select-${row.id}">
                         <option value="customer" ${data === 'customer' ? 'selected' : ''}>Customer</option>
                         <option value="admin" ${data === 'admin' ? 'selected' : ''}>Admin</option>
                     </select>
@@ -75,6 +75,7 @@ $(document).ready(function () {
             {
                 data: 'id',
                 render: (data, type, row) => `
+                    <button class="admin-action-btn btn-primary" onclick="commitUserRole(${data})">Update Role</button>
                     <button class="admin-action-btn ${row.status === 'Active' ? 'btn-danger' : 'btn-success'}" onclick="toggleUserDeactivation(${data})">
                         ${row.status === 'Active' ? 'Deactivate' : 'Activate'}
                     </button>
@@ -106,7 +107,7 @@ $(document).ready(function () {
             { 
                 data: 'status',
                 render: (data, type, row) => `
-                    <select class="admin-select" onchange="updateTransactionStatus(${row.transaction_id}, this.value)">
+                    <select class="admin-select" id="status-select-${row.transaction_id}">
                         <option value="Pending" ${data === 'Pending' ? 'selected' : ''}>Pending</option>
                         <option value="Paid" ${data === 'Paid' ? 'selected' : ''}>Paid</option>
                         <option value="Completed" ${data === 'Completed' ? 'selected' : ''}>Completed</option>
@@ -117,6 +118,7 @@ $(document).ready(function () {
             {
                 data: 'transaction_id',
                 render: data => `
+                    <button class="admin-action-btn btn-primary" onclick="commitTransactionStatus(${data})">Update Status</button>
                     <button class="admin-action-btn btn-danger" onclick="deleteTransaction(${data})">Delete</button>
                 `
             }
@@ -235,7 +237,8 @@ $(document).ready(function () {
     // --------------------------------------------------------
     // 3. ADMIN USER ACTIONS
     // --------------------------------------------------------
-    window.updateUserRole = function (id, role) {
+    window.commitUserRole = function (id) {
+        const role = $(`#role-select-${id}`).val();
         $.ajax({
             url: `${API_URL}/users/${id}/role`,
             type: 'PUT',
@@ -270,9 +273,10 @@ $(document).ready(function () {
     // --------------------------------------------------------
     // 4. TRANSACTION ACTIONS & EMAIL INVOICES
     // --------------------------------------------------------
-    window.updateTransactionStatus = function (id, status) {
+    window.commitTransactionStatus = function (id) {
+        const status = $(`#status-select-${id}`).val();
         // Triggers PDF invoicing + email sending (Term Test 15pts requirement)
-        const selectEl = $(`select[onchange="updateTransactionStatus(${id}, this.value)"]`);
+        const selectEl = $(`#status-select-${id}`);
         selectEl.css('opacity', '0.5').prop('disabled', true);
         
         $.ajax({

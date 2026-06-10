@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
     <style>
         .item-wrapper {
             max-width: 1000px;
@@ -284,7 +284,7 @@
         <!-- Product Detail -->
         <div class="product-detail">
             <div class="product-image-box" id="productImageBox">
-                <img id="productImage" src="assets/toy_placeholder.png" alt="product">
+                <img id="productImage" src="../assets/toy_placeholder.png" alt="product">
             </div>
             <div class="product-info">
                 <span class="brand-tag">Authentic Pop Mart</span>
@@ -345,7 +345,7 @@
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="js/header-loader.js"></script>
+    <script src="../js/header-loader.js"></script>
 
     <script>
         const API_URL = 'http://localhost:3000/api/v1';
@@ -367,7 +367,7 @@
                     if (res.success && res.result.length > 0) {
                         currentItem = res.result[0];
                         const item = currentItem;
-                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : 'assets/toy_placeholder.png';
+                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
 
                         document.title = `${item.description} — Little Mono`;
                         $('#productName').text(item.description);
@@ -398,7 +398,7 @@
         window.addToCart = function() {
             if (!token) {
                 alert('Please sign in first to add items to your cart.');
-                window.location.href = 'login.html';
+                window.location.href = '../login.html';
                 return;
             }
             // Simple localStorage cart
@@ -432,7 +432,7 @@
         window.toggleWishlist = function() {
             if (!token) {
                 alert('Please sign in first to use your wishlist.');
-                window.location.href = 'login.html';
+                window.location.href = '../login.html';
                 return;
             }
             $.ajax({
@@ -504,7 +504,7 @@
                     } else {
                         $('#reviewFormArea').html(`
                             <div class="review-locked-msg">
-                                <a href="login.html" style="color: var(--accent-gold-dark); font-weight: 600; text-decoration: none;">Sign in</a> to leave a review
+                                <a href="../login.html" style="color: var(--accent-gold-dark); font-weight: 600; text-decoration: none;">Sign in</a> to leave a review
                             </div>
                         `);
                     }

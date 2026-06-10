@@ -211,7 +211,7 @@ $(document).ready(function () {
                         return;
                     }
                     list.forEach(item => {
-                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : 'assets/toy_placeholder.png';
+                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
                         resultsBox.append(`
                             <div class="autocomplete-item" onclick="selectSearchFigurine(${item.item_id}, '${escapeQuote(item.description)}')" style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s ease; border-bottom: 1px solid #f4eedc;">
                                 <img src="${img}" style="width: 30px; height: 30px; border-radius: 4px; border: 1px solid #c5a880;" alt="thumb">
@@ -288,7 +288,7 @@ $(document).ready(function () {
     // 8. CARD TEMPLATE
     // --------------------------------------------------------
     function createProductCard(item) {
-        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : 'assets/toy_placeholder.png';
+        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
         const price = parseFloat(item.sell_price).toFixed(2);
         
         return `

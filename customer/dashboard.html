@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
     <style>
         /* ===== Dashboard Layout ===== */
         .dash-wrapper {
@@ -462,13 +462,8 @@
             <!-- Wishlist -->
             <div class="dash-panel">
                 <h3>My Wishlist <a href="shop.html" class="view-all">View All</a></h3>
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                    <div class="empty-title">No items in wishlist</div>
-                    <p>Save your favorite products for later</p>
-                    <button class="dash-btn primary" onclick="window.location.href='shop.html'">Explore Products</button>
+                <div id="wishlistContainer" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div class="empty-state" style="padding: 1rem;"><p style="margin-bottom: 0;">Loading...</p></div>
                 </div>
             </div>
 
@@ -538,7 +533,7 @@
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="js/header-loader.js"></script>
+    <script src="../js/header-loader.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -594,7 +589,7 @@
                             year: 'numeric', month: 'short', day: 'numeric'
                         });
                         const firstItem = order.items[0] || {};
-                        const img = firstItem.img_path ? `http://localhost:3000/${firstItem.img_path}` : 'assets/toy_placeholder.png';
+                        const img = firstItem.img_path ? `http://localhost:3000/${firstItem.img_path}` : '../assets/toy_placeholder.png';
                         const extraCount = order.items.length > 1 ? ` +${order.items.length - 1} more` : '';
 
                         container.append(`
@@ -619,7 +614,67 @@
                     $('#ordersContainer').html('<div class="empty-state"><p style="color:#c94a4a;">Error loading data. Ensure server is running.</p></div>');
                 }
             });
+
+            // ===== Load Wishlist =====
+            $.ajax({
+                url: 'http://localhost:3000/api/v1/wishlist',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function(res) {
+                    const wc = $('#wishlistContainer');
+                    wc.empty();
+                    const items = res.items || [];
+                    if (items.length === 0) {
+                        wc.html(`
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                <div class="empty-title">No items in wishlist</div>
+                                <p>Save your favorite products for later</p>
+                                <button class="dash-btn primary" onclick="window.location.href='shop.html'">Explore Products</button>
+                            </div>
+                        `);
+                        return;
+                    }
+                    items.forEach(item => {
+                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
+                        wc.append(`
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.7rem; background: rgba(245,239,230,0.2); border: 1px solid rgba(197,168,128,0.08); border-radius: 10px; gap: 0.8rem;" id="wl-${item.item_id}">
+                                <a href="item.html?id=${item.item_id}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; flex: 1;">
+                                    <img src="${img}" style="width: 38px; height: 38px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.12); object-fit: contain; background: #fff; flex-shrink: 0;" alt="item">
+                                    <div style="min-width: 0;">
+                                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.description}</div>
+                                        <div style="font-size: 0.75rem; color: var(--accent-gold-dark); font-weight: 600;">$${parseFloat(item.sell_price).toFixed(2)}</div>
+                                    </div>
+                                </a>
+                                <button onclick="removeFromWishlist(${item.item_id})" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; transition: color 0.2s;" title="Remove from wishlist">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        `);
+                    });
+                },
+                error: function() {
+                    $('#wishlistContainer').html('<div class="empty-state"><p>Could not load wishlist.</p></div>');
+                }
+            });
         });
+
+        function removeFromWishlist(itemId) {
+            const token = localStorage.getItem('token');
+            $.ajax({
+                url: 'http://localhost:3000/api/v1/wishlist/' + itemId + '/toggle',
+                type: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                contentType: 'application/json',
+                success: function(res) {
+                    if (res.success && !res.wishlisted) {
+                        $('#wl-' + itemId).fadeOut(300, function() { $(this).remove(); });
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -7,12 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div class="auth-page-container">
         <div class="auth-card">
-            <div class="auth-card-header" onclick="window.location.href='index.html'">
+            <div class="auth-card-header" onclick="window.location.href='../index.html'">
                 <div class="logo">
                     <span class="brand-name">LITTLE MONO</span>
                     <span class="sub-brand">DESIGNER TOYS</span>
@@ -50,7 +50,7 @@
         const userJson = localStorage.getItem('user');
         if (!token || !userJson) {
             alert("Unauthorized. Redirecting to login.");
-            window.location.href = "login.html";
+            window.location.href = "../login.html";
         }
 
         const user = JSON.parse(userJson);
@@ -83,7 +83,7 @@
                 if (response.ok && data.success) {
                     alert("Your account has been successfully deactivated.");
                     localStorage.clear();
-                    window.location.href = "index.html";
+                    window.location.href = "../index.html";
                 } else {
                     alert(data.error || "Deactivation failed.");
                 }
