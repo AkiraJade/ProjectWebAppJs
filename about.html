@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us — Little Mono</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .about-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: calc(var(--header-height) + 50px) 1.5rem 4rem 1.5rem;
+        }
+        .about-hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .about-hero h1 {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        .about-hero p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 5rem;
+        }
+        .about-image-wrapper {
+            position: relative;
+            background: rgba(245, 239, 230, 0.4);
+            border: 1px solid rgba(197, 168, 128, 0.2);
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            height: 400px;
+            box-shadow: 0 15px 35px rgba(28,28,28,0.03);
+        }
+        .about-image-wrapper img {
+            max-height: 90%;
+            max-width: 90%;
+            object-fit: contain;
+            transition: transform 0.5s ease;
+        }
+        .about-image-wrapper:hover img {
+            transform: scale(1.05);
+        }
+        .about-content h2 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.2rem;
+        }
+        .about-content p {
+            font-size: 0.98rem;
+            color: var(--text-secondary);
+            line-height: 1.75;
+            margin-bottom: 1.5rem;
+        }
+        .philosophy-section {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(197, 168, 128, 0.15);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 4rem;
+            backdrop-filter: blur(10px);
+        }
+        .philosophy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .philosophy-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+        .philosophy-card:hover {
+            transform: translateY(-5px);
+        }
+        .philosophy-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--accent-gold-dark);
+        }
+        .philosophy-card p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        @media (max-width: 768px) {
+            .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+            .philosophy-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .about-image-wrapper { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Dynamic Navigation Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="about-container">
+        <!-- Hero Title -->
+        <div class="about-hero">
+            <h1>The Hirono Universe</h1>
+            <p>Little Mono welcomes you to a world of vulnerability, raw emotion, and exquisite designer art toys.</p>
+        </div>
+
+        <!-- Two Column Grid -->
+        <div class="about-grid">
+            <div class="about-content">
+                <h2>Behind the Emptiness</h2>
+                <p>Created by artist Lang and released in partnership with Pop Mart, the <strong>Hirono</strong> series has captured the hearts of collectors worldwide. Unlike traditional designer toys that project joy or excitement, Hirono is a reflection of quiet solitude, nostalgia, and emotional truth.</p>
+                <p>Lang's design philosophy centers on the idea of preserving the child within all of us—the child who experiences fear, curiosity, loneliness, and wonder without pretense. Each Hirono figure represents a unique state of mind, beautifully hand-painted and sculpted to evoke personal memories and feelings.</p>
+                <p>At Little Mono, we curate authentic Hirono figurines for passionate collectors. We believe that art toys are not merely decorative items, but emotional companions that anchor our experiences in physical form.</p>
+            </div>
+            <div class="about-image-wrapper">
+                <img src="assets/toy_placeholder.png" alt="Hirono Figurine">
+            </div>
+        </div>
+
+        <!-- Philosophy Section -->
+        <div class="philosophy-section">
+            <h2 style="text-align: center; font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">Our Brand Pillars</h2>
+            <div class="philosophy-grid">
+                <div class="philosophy-card">
+                    <h3>100% Authenticity</h3>
+                    <p>Every figurine in our shop is sourced directly from Pop Mart. We guarantee absolute authenticity, pristine packaging, and high collector value.</p>
+                </div>
+                <div class="philosophy-card">
+                    <h3>Curated Selection</h3>
+                    <p>From the Hirono Little Prince collaboration to the rare Mime and Elephant series, we source the most sought-after blind boxes and confirmed models.</p>
+                </div>
+                <div class="philosophy-card">
+                    <h3>Collector Community</h3>
+                    <p>We build space for designer toy enthusiasts to share reviews, express wishlist selections, and build their unique digital shelves.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="auth-back-link" style="text-align: center;">
+            <a href="customer/shop.html">
+                <span style="vertical-align: middle;">Explore the Collection</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-left: 4px;">
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer" id="mainFooter">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p class="credits-text">Credits to owner Orlanda and Navasca @2026.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#terms" class="footer-link">Terms</a>
+                <a href="#privacy" class="footer-link">Privacy</a>
+                <a href="#contact" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="js/header-loader.js"></script>
+</body>
+</html>

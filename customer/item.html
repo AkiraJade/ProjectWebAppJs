@@ -268,6 +268,32 @@
             margin-top: 1rem;
         }
 
+        /* Product Gallery Thumbnails */
+        .product-thumbnail {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            border: 2px solid rgba(197, 168, 128, 0.15);
+            background: rgba(245, 239, 230, 0.35);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-shrink: 0;
+        }
+        .product-thumbnail:hover, .product-thumbnail.active {
+            border-color: var(--accent-gold);
+            background: rgba(245, 239, 230, 0.55);
+            transform: translateY(-2px);
+        }
+        .product-thumbnail img {
+            max-width: 85%;
+            max-height: 85%;
+            object-fit: contain;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .product-detail { grid-template-columns: 1fr; }
@@ -283,8 +309,11 @@
 
         <!-- Product Detail -->
         <div class="product-detail">
-            <div class="product-image-box" id="productImageBox">
-                <img id="productImage" src="../assets/toy_placeholder.png" alt="product">
+            <div class="product-image-container" style="display: flex; flex-direction: column; gap: 0.8rem; width: 100%;">
+                <div class="product-image-box" id="productImageBox" style="width: 100%;">
+                    <img id="productImage" src="../assets/toy_placeholder.png" alt="product">
+                </div>
+                <div class="product-thumbnails" id="productThumbnails" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 5px;"></div>
             </div>
             <div class="product-info">
                 <span class="brand-tag">Authentic Pop Mart</span>
@@ -354,43 +383,157 @@
         const token = localStorage.getItem('token');
         let currentItem = null;
 
+        // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
+        const originalFetch = window.fetch;
+        window.fetch = async function (resource, init) {
+            const url = typeof resource === 'string' ? resource : resource.url;
+            const currentToken = localStorage.getItem('token');
+            if (url.includes('/api/v1/') && currentToken) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    init.headers.set('Authorization', `Bearer ${currentToken}`);
+                } else {
+                    init.headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+            }
+
+            try {
+                const res = await originalFetch(resource, init);
+                
+                if (res.status === 401) {
+                    let message = 'Session expired. Please log in again.';
+                    try {
+                        const clone = res.clone();
+                        const data = await clone.json();
+                        message = data.message || data.error || message;
+                    } catch (e) {}
+                    
+                    alert(message);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    
+                    let loginUrl = 'login.html';
+                    const path = window.location.pathname;
+                    if (path.match(/\/(admin|customer)\//i)) {
+                        loginUrl = '../login.html';
+                    }
+                    window.location.href = loginUrl;
+                    
+                    return new Promise(() => {}); // abort subsequent .then() chains
+                }
+                
+                // Intercept json() to map message -> error for legacy compatibility and handle non-JSON error pages
+                const originalJson = res.json;
+                res.json = async function () {
+                    try {
+                        const data = await originalJson.call(res);
+                        if (data && typeof data === 'object') {
+                            if (data.message && !data.error) {
+                                data.error = data.message;
+                            }
+                        }
+                        return data;
+                    } catch (jsonErr) {
+                        if (!res.ok) {
+                            return { error: `Server error (${res.status}). Please check your backend logs.` };
+                        }
+                        throw jsonErr;
+                    }
+                };
+                
+                return res;
+            } catch (err) {
+                throw err;
+            }
+        };
+
         if (!itemId) {
             window.location.href = 'shop.html';
         }
 
+        // Helper to resolve image paths correctly (local assets vs backend uploaded images)
+        function resolveImagePath(path) {
+            if (!path) return '../assets/toy_placeholder.png';
+            if (path.startsWith('http://') || path.startsWith('https://')) return path;
+            let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+            if (cleanPath.startsWith('assets/')) return '../' + cleanPath;
+            return `http://localhost:3000/${cleanPath}`;
+        }
+
+        // Image switcher function
+        window.changeProductImage = function(url, element) {
+            const mainImg = $('#productImage');
+            mainImg.fadeOut(150, function() {
+                mainImg.attr('src', url).fadeIn(150);
+            });
+            $('.product-thumbnail').removeClass('active');
+            $(element).addClass('active');
+        };
+
         // ===== Load Product Detail =====
         function loadProduct() {
-            $.ajax({
-                url: `${API_URL}/items/${itemId}`,
-                type: 'GET',
-                success: function(res) {
-                    if (res.success && res.result.length > 0) {
-                        currentItem = res.result[0];
-                        const item = currentItem;
-                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
+            fetch(`${API_URL}/items/${itemId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Product not found');
+                return res.json();
+            })
+            .then(res => {
+                if (res.success && res.result.length > 0) {
+                    currentItem = res.result[0];
+                    const item = currentItem;
 
-                        document.title = `${item.description} — Little Mono`;
-                        $('#productName').text(item.description);
-                        $('#productPrice').text('$' + parseFloat(item.sell_price).toFixed(2));
-                        $('#productImage').attr('src', img).attr('alt', item.description);
-                        $('#productDesc').text(`The ${item.description} designer toy encapsulates raw emotion and vulnerability, crafted with pristine, hand-painted details. Direct from Pop Mart, 100% authentic and rare.`);
+                    document.title = `${item.description} — Little Mono`;
+                    $('#productName').text(item.description);
+                    $('#productPrice').text('$' + parseFloat(item.sell_price).toFixed(2));
+                    $('#productDesc').text(`The ${item.description} designer toy encapsulates raw emotion and vulnerability, crafted with pristine, hand-painted details. Direct from Pop Mart, 100% authentic and rare.`);
 
-                        const qty = item.quantity || 0;
-                        if (qty > 0) {
-                            $('#productAvailability').css('color', 'var(--accent-gold-dark)').text(`In Stock (${qty} units)`);
-                        } else {
-                            $('#productAvailability').css('color', '#c94a4a').text('Out of Stock');
-                            $('#addToCartBtn').prop('disabled', true).css('opacity', '0.4').text('Out of Stock');
-                        }
-
-                        // Load reviews and wishlist state
-                        loadReviews();
-                        checkWishlistState();
+                    // Build image gallery
+                    const galleryImages = [];
+                    if (item.img_path) galleryImages.push(item.img_path);
+                    if (item.images && Array.isArray(item.images)) {
+                        item.images.forEach(p => {
+                            if (p && !galleryImages.includes(p)) {
+                                galleryImages.push(p);
+                            }
+                        });
                     }
-                },
-                error: function() {
-                    $('#productName').text('Product Not Found');
+
+                    // Set main image
+                    const mainImgUrl = resolveImagePath(galleryImages[0]);
+                    $('#productImage').attr('src', mainImgUrl).attr('alt', item.description);
+
+                    // Populate thumbnails
+                    const thumbContainer = $('#productThumbnails');
+                    thumbContainer.empty();
+                    
+                    if (galleryImages.length > 1) {
+                        galleryImages.forEach((path, idx) => {
+                            const fullUrl = resolveImagePath(path);
+                            const isActive = idx === 0 ? 'active' : '';
+                            thumbContainer.append(`
+                                <div class="product-thumbnail ${isActive}" onclick="window.changeProductImage('${fullUrl}', this)">
+                                    <img src="${fullUrl}" alt="${item.description} thumbnail">
+                                </div>
+                            `);
+                        });
+                    }
+
+                    const qty = item.quantity || 0;
+                    if (qty > 0) {
+                        $('#productAvailability').css('color', 'var(--accent-gold-dark)').text(`In Stock (${qty} units)`);
+                    } else {
+                        $('#productAvailability').css('color', '#c94a4a').text('Out of Stock');
+                        $('#addToCartBtn').prop('disabled', true).css('opacity', '0.4').text('Out of Stock');
+                    }
+
+                    // Load reviews and wishlist state
+                    loadReviews();
+                    checkWishlistState();
                 }
+            })
+            .catch(err => {
+                $('#productName').text('Product Not Found');
             });
         }
 
@@ -417,16 +560,19 @@
         // ===== Wishlist =====
         function checkWishlistState() {
             if (!token) return;
-            $.ajax({
-                url: `${API_URL}/wishlist/${itemId}/check`,
-                type: 'GET',
-                headers: { 'Authorization': 'Bearer ' + token },
-                success: function(res) {
-                    if (res.wishlisted) {
-                        $('#wishlistBtn').addClass('wishlisted').attr('title', 'Remove from Wishlist');
-                    }
+            fetch(`${API_URL}/wishlist/${itemId}/check`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Check failed');
+                return res.json();
+            })
+            .then(res => {
+                if (res.wishlisted) {
+                    $('#wishlistBtn').addClass('wishlisted').attr('title', 'Remove from Wishlist');
                 }
-            });
+            })
+            .catch(err => console.error(err));
         }
 
         window.toggleWishlist = function() {
@@ -435,21 +581,27 @@
                 window.location.href = '../login.html';
                 return;
             }
-            $.ajax({
-                url: `${API_URL}/wishlist/${itemId}/toggle`,
-                type: 'POST',
-                headers: { 'Authorization': 'Bearer ' + token },
-                contentType: 'application/json',
-                success: function(res) {
-                    if (res.success) {
-                        if (res.wishlisted) {
-                            $('#wishlistBtn').addClass('wishlisted').attr('title', 'Remove from Wishlist');
-                        } else {
-                            $('#wishlistBtn').removeClass('wishlisted').attr('title', 'Add to Wishlist');
-                        }
+            fetch(`${API_URL}/wishlist/${itemId}/toggle`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Toggle failed');
+                return res.json();
+            })
+            .then(res => {
+                if (res.success) {
+                    if (res.wishlisted) {
+                        $('#wishlistBtn').addClass('wishlisted').attr('title', 'Remove from Wishlist');
+                    } else {
+                        $('#wishlistBtn').removeClass('wishlisted').attr('title', 'Add to Wishlist');
                     }
                 }
-            });
+            })
+            .catch(err => console.error(err));
         };
 
         // ===== Reviews =====
@@ -463,91 +615,93 @@
         }
 
         function loadReviews() {
-            $.ajax({
-                url: `${API_URL}/reviews/${itemId}`,
-                type: 'GET',
-                success: function(res) {
-                    const reviews = res.reviews || [];
-                    const container = $('#reviewsList');
-                    container.empty();
+            fetch(`${API_URL}/reviews/${itemId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load reviews');
+                return res.json();
+            })
+            .then(res => {
+                const reviews = res.reviews || [];
+                const container = $('#reviewsList');
+                container.empty();
 
-                    if (reviews.length === 0) {
-                        container.html('<div style="text-align: center; padding: 1.5rem; color: var(--text-secondary); font-size: 0.88rem;">No reviews yet. Be the first to review this figurine!</div>');
-                        $('#reviewAvg').text('');
-                    } else {
-                        // Calculate average
-                        const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-                        $('#reviewAvg').html(`${renderStars(Math.round(avg))} ${avg.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? 's' : ''})`);
+                if (reviews.length === 0) {
+                    container.html('<div style="text-align: center; padding: 1.5rem; color: var(--text-secondary); font-size: 0.88rem;">No reviews yet. Be the first to review this figurine!</div>');
+                    $('#reviewAvg').text('');
+                } else {
+                    const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                    $('#reviewAvg').html(`${renderStars(Math.round(avg))} ${avg.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? 's' : ''})`);
 
-                        reviews.forEach(r => {
-                            const date = new Date(r.created_at).toLocaleDateString(undefined, {
-                                year: 'numeric', month: 'short', day: 'numeric'
-                            });
-                            container.append(`
-                                <div class="review-card">
-                                    <div class="review-card-header">
-                                        <div>
-                                            <span class="review-author">${escapeHTML(r.user ? r.user.name : 'Anonymous')}</span>
-                                            <div style="margin-top: 2px;">${renderStars(r.rating)}</div>
-                                        </div>
-                                        <span class="review-date">${date}</span>
-                                    </div>
-                                    ${r.comment ? `<p class="review-text">${escapeHTML(r.comment)}</p>` : ''}
-                                </div>
-                            `);
+                    reviews.forEach(r => {
+                        const date = new Date(r.created_at).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
                         });
-                    }
-
-                    // Check if user can write a review
-                    if (token) {
-                        checkCanReview();
-                    } else {
-                        $('#reviewFormArea').html(`
-                            <div class="review-locked-msg">
-                                <a href="../login.html" style="color: var(--accent-gold-dark); font-weight: 600; text-decoration: none;">Sign in</a> to leave a review
+                        container.append(`
+                            <div class="review-card">
+                                <div class="review-card-header">
+                                    <div>
+                                        <span class="review-author">${escapeHTML(r.user ? r.user.name : 'Anonymous')}</span>
+                                        <div style="margin-top: 2px;">${renderStars(r.rating)}</div>
+                                    </div>
+                                    <span class="review-date">${date}</span>
+                                </div>
+                                ${r.comment ? `<p class="review-text">${escapeHTML(r.comment)}</p>` : ''}
                             </div>
                         `);
-                    }
+                    });
                 }
-            });
+
+                if (token) {
+                    checkCanReview();
+                } else {
+                    $('#reviewFormArea').html(`
+                        <div class="review-locked-msg">
+                            <a href="../login.html" style="color: var(--accent-gold-dark); font-weight: 600; text-decoration: none;">Sign in</a> to leave a review
+                        </div>
+                    `);
+                }
+            })
+            .catch(err => console.error(err));
         }
 
         function checkCanReview() {
-            $.ajax({
-                url: `${API_URL}/reviews/${itemId}/can-review`,
-                type: 'GET',
-                headers: { 'Authorization': 'Bearer ' + token },
-                success: function(res) {
-                    const area = $('#reviewFormArea');
-                    area.empty();
+            fetch(`${API_URL}/reviews/${itemId}/can-review`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Check failed');
+                return res.json();
+            })
+            .then(res => {
+                const area = $('#reviewFormArea');
+                area.empty();
 
-                    if (res.hasReviewed) {
-                        area.html('<div class="review-locked-msg">✓ You have already reviewed this item</div>');
-                    } else if (res.canReview) {
-                        // Show review form
-                        area.html(`
-                            <div class="review-form">
-                                <h3>Write a Review</h3>
-                                <div class="star-rating-input" id="starRatingInput">
-                                    <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
-                                    <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
-                                    <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
-                                    <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
-                                    <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
-                                </div>
-                                <textarea class="review-textarea" id="reviewComment" placeholder="Share your thoughts about this figurine (optional)..."></textarea>
-                                <button class="btn-submit-review" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
+                if (res.hasReviewed) {
+                    area.html('<div class="review-locked-msg">✓ You have already reviewed this item</div>');
+                } else if (res.canReview) {
+                    area.html(`
+                        <div class="review-form">
+                            <h3>Write a Review</h3>
+                            <div class="star-rating-input" id="starRatingInput">
+                                <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+                                <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+                                <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+                                <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+                                <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
                             </div>
-                        `);
-                    } else {
-                        area.html(`
-                            <div class="review-locked-msg">
-                                🔒 Reviews are available after you receive this item in an order
-                            </div>
-                        `);
-                    }
+                            <textarea class="review-textarea" id="reviewComment" placeholder="Share your thoughts about this figurine (optional)..."></textarea>
+                            <button class="btn-submit-review" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
+                        </div>
+                    `);
+                } else {
+                    area.html(`
+                        <div class="review-locked-msg">
+                            🔒 Reviews are available after you receive this item in an order
+                        </div>
+                    `);
                 }
-            });
+            })
+            .catch(err => console.error(err));
         }
 
         let selectedRating = 0;
@@ -574,27 +728,22 @@
             const btn = $('#submitReviewBtn');
             btn.prop('disabled', true).text('Submitting...');
 
-            $.ajax({
-                url: `${API_URL}/reviews/${itemId}`,
-                type: 'POST',
+            fetch(`${API_URL}/reviews/${itemId}`, {
+                method: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
                 },
-                data: JSON.stringify({ rating: selectedRating, comment }),
-                success: function(res) {
-                    if (res.success) {
-                        loadReviews(); // Reload reviews list
-                    } else {
-                        alert(res.error || 'Failed to submit review.');
-                        btn.prop('disabled', false).text('Submit Review');
-                    }
-                },
-                error: function(xhr) {
-                    const msg = xhr.responseJSON ? xhr.responseJSON.error : 'Failed to submit review.';
-                    alert(msg);
-                    btn.prop('disabled', false).text('Submit Review');
-                }
+                body: JSON.stringify({ rating: selectedRating, comment })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to submit review.');
+                loadReviews();
+            })
+            .catch(err => {
+                alert(err.message);
+                btn.prop('disabled', false).text('Submit Review');
             });
         };
 

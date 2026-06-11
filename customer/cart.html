@@ -8,34 +8,191 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .quantity-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(197, 168, 128, 0.25);
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        .quantity-btn:hover {
+            border-color: var(--accent-gold);
+            background: rgba(245, 239, 230, 0.4);
+            color: var(--text-primary);
+        }
+        .remove-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .remove-btn:hover {
+            color: #c94a4a;
+            background: rgba(201, 74, 74, 0.05);
+        }
+        .checkout-input {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            border-radius: 10px;
+            border: 1px solid rgba(197, 168, 128, 0.2);
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+        .checkout-input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.1);
+        }
+    </style>
 </head>
 <body>
     <!-- Dynamic Navigation Header -->
     <div id="header-placeholder"></div>
 
-    <div class="auth-page-container" style="padding-top: 120px;">
-        <div class="auth-card" style="max-width: 600px; width: 95%;">
-            <h2 class="auth-title">Your Cart</h2>
-            <p class="auth-subtitle">Review your Hirono designer toy selections</p>
+    <div class="auth-page-container" style="padding-top: 120px; padding-bottom: 60px; min-height: calc(100vh - 120px);">
+        <div class="auth-card" style="max-width: 650px; width: 95%; padding: 2.5rem; margin-bottom: 20px;">
+            <h2 class="auth-title" style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 0.2rem;">Your Cart</h2>
+            <p class="auth-subtitle" style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Review your Hirono designer toy selections</p>
             
-            <div style="display: flex; flex-direction: column; gap: 1.5rem; margin: 2rem 0; border-top: 1px solid rgba(197, 168, 128, 0.15); border-bottom: 1px solid rgba(197, 168, 128, 0.15); padding: 1.5rem 0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-primary);">Hirono Hero Prince</h4>
-                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Quantity: 1</span>
+            <!-- Cart Items List -->
+            <div id="cartItemsList" style="display: flex; flex-direction: column; gap: 1.2rem; margin: 1.5rem 0;">
+                <div style="text-align: center; padding: 2rem 0; color: var(--text-secondary);">Loading your cart items...</div>
+            </div>
+            
+            <!-- Summary & Details Section -->
+            <div id="cartSummarySection" style="display: none; border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 1.5rem;">
+                
+                <!-- Shipping & Payment Form -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-gold);"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                        Shipping & Payment Details
+                    </h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                            <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">First Name</label>
+                            <input type="text" id="shippingFname" placeholder="John" class="checkout-input">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                            <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Last Name</label>
+                            <input type="text" id="shippingLname" placeholder="Doe" class="checkout-input">
+                        </div>
                     </div>
-                    <span style="font-family: var(--font-heading); font-weight: 600; color: var(--accent-gold-dark);">$599.00</span>
+
+                    <!-- Address Selector Option -->
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Saved Shipping Addresses</label>
+                        <div style="display: flex; gap: 0.75rem; align-items: center;">
+                            <select id="shippingAddressSelect" onchange="onAddressSelectChange()" class="checkout-input" style="flex: 1; cursor: pointer;">
+                                <option value="custom">-- Enter a custom address --</option>
+                            </select>
+                            <button type="button" onclick="openAddressModal()" class="quantity-btn" style="width: auto; height: 38px; border-radius: 8px; padding: 0 0.8rem; font-size: 0.82rem; gap: 4px; display: flex; align-items: center;" title="Add new address">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Add Address
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Delivery Address</label>
+                        <input type="text" id="shippingAddress" placeholder="123 Collector Lane, Toy City" class="checkout-input">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Contact Phone</label>
+                        <input type="text" id="shippingPhone" placeholder="123-456-7890" class="checkout-input">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.2rem;">
+                        <label style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary);">Payment Method</label>
+                        <select id="paymentMethod" onchange="togglePaymentFields()" style="cursor: pointer;" class="checkout-input">
+                            <option value="Cash on Delivery">Cash on Delivery (COD)</option>
+                            <option value="Credit Card">Credit / Debit Card</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Dynamic Payment Details -->
+                    <div id="creditCardDetails" style="display: none; flex-direction: column; gap: 0.8rem; padding: 1.2rem; background: rgba(245,239,230,0.25); border: 1px dashed rgba(197, 168, 128, 0.25); border-radius: 12px; margin-bottom: 1.2rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                            <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);">Card Number</label>
+                            <input type="text" placeholder="1234 5678 9012 3456" id="cardNumber" class="checkout-input">
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 1;">
+                                <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);">Expiry Date</label>
+                                <input type="text" placeholder="MM/YY" id="cardExpiry" class="checkout-input">
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 1;">
+                                <label style="font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);">CVV</label>
+                                <input type="text" placeholder="123" id="cardCvv" class="checkout-input">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="paypalDetails" style="display: none; padding: 1rem; background: rgba(245,239,230,0.25); border: 1px dashed rgba(197, 168, 128, 0.25); border-radius: 12px; margin-bottom: 1.2rem; font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
+                        You will be redirected to PayPal sandbox to complete authentication upon checkout.
+                    </div>
+
+                    <div id="bankDetails" style="display: none; padding: 1.2rem; background: rgba(245,239,230,0.25); border: 1px dashed rgba(197, 168, 128, 0.25); border-radius: 12px; margin-bottom: 1.2rem; font-size: 0.85rem; color: var(--text-secondary);">
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">Bank Transfer Instructions:</div>
+                        Please send the total payment to the bank account below:<br>
+                        <strong>Bank:</strong> Little Mono Central Bank<br>
+                        <strong>Account Name:</strong> Little Mono Toy Store Co.<br>
+                        <strong>Account Number:</strong> 9876-5432-1098
+                    </div>
                 </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.95rem; color: var(--text-secondary); border-top: 1px solid rgba(197, 168, 128, 0.1); padding-top: 1rem;">
+                    <span>Subtotal</span>
+                    <span id="cartSubtotal">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1.2rem; font-size: 0.95rem; color: var(--text-secondary);">
+                    <span>Shipping Fee</span>
+                    <span id="cartShipping">$100.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; border-top: 1px solid rgba(197, 168, 128, 0.08); padding-top: 1rem;">
+                    <span style="color: var(--text-primary);">Total</span>
+                    <span style="color: var(--accent-gold-dark);" id="cartTotal">$0.00</span>
+                </div>
+                
+                <button class="btn-auth-submit" id="checkoutBtn" onclick="checkoutOrder()" style="width: 100%; font-family: var(--font-heading); font-size: 0.95rem; font-weight: 600; padding: 0.85rem; border-radius: 12px; border: none; background: var(--text-primary); color: #fff; cursor: pointer; transition: opacity 0.3s;">Confirm and Place Order</button>
+            </div>
+
+            <!-- Empty State Section -->
+            <div id="cartEmptyState" style="text-align: center; padding: 2.5rem 1rem; display: none;">
+                <div style="margin-bottom: 1.2rem;">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Your cart is empty</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Add some beautiful Hirono figurines to start your collection.</p>
+                <button class="btn-auth-submit" onclick="window.location.href='shop.html'" style="display: inline-block; width: auto; padding: 0.7rem 2rem;">Shop Now</button>
             </div>
             
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700;">
-                <span style="color: var(--text-primary);">Total</span>
-                <span style="color: var(--accent-gold-dark);">$599.00</span>
-            </div>
-            
-            <button class="btn-auth-submit" onclick="alert('Checkout integration coming soon!')">Proceed to Checkout</button>
-            
-            <div class="auth-back-link">
+            <div class="auth-back-link" style="text-align: center; margin-top: 1.5rem;">
                 <a href="shop.html">
                     <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
                         <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
@@ -45,6 +202,511 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Address Modal -->
+    <div id="addressModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(28,28,28,0.4); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="auth-card" style="max-width: 480px; width: 90%; padding: 2.2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid rgba(197, 168, 128, 0.25);">
+            <button onclick="closeAddressModal()" style="position: absolute; top: 1.2rem; right: 1.2rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-gold);"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                Add Shipping Address
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.8rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                    <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">Street Address</label>
+                    <input type="text" id="modalStreet" placeholder="123 Collector Lane" class="checkout-input">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                        <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">City</label>
+                        <input type="text" id="modalCity" placeholder="Toy City" class="checkout-input">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                        <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">Province</label>
+                        <input type="text" id="modalProvince" placeholder="State/Province" class="checkout-input">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                        <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">Zip Code</label>
+                        <input type="text" id="modalZip" placeholder="12345" class="checkout-input">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                        <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">Country</label>
+                        <input type="text" id="modalCountry" placeholder="United States" class="checkout-input">
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="closeAddressModal()" class="btn-auth-submit" style="background: transparent; border: 1px solid rgba(197, 168, 128, 0.3); color: var(--text-primary); flex: 1;">Cancel</button>
+                <button onclick="saveAddress()" id="saveAddressBtn" class="btn-auth-submit" style="flex: 1;">Save Address</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer" id="mainFooter">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p class="credits-text">Credits to owner Orlanda and Navasca @2026.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#terms" class="footer-link">Terms</a>
+                <a href="#privacy" class="footer-link">Privacy</a>
+                <a href="#contact" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="../js/header-loader.js"></script>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/v1';
+        const token = localStorage.getItem('token');
+        const userJson = localStorage.getItem('user');
+        let cart = [];
+        let userAddresses = [];
+
+        // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
+        const originalFetch = window.fetch;
+        window.fetch = async function (resource, init) {
+            const url = typeof resource === 'string' ? resource : resource.url;
+            const currentToken = localStorage.getItem('token');
+            if (url.includes('/api/v1/') && currentToken) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    init.headers.set('Authorization', `Bearer ${currentToken}`);
+                } else {
+                    init.headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+            }
+
+            try {
+                const res = await originalFetch(resource, init);
+                if (res.status === 401) {
+                    let message = 'Session expired. Please log in again.';
+                    try {
+                        const clone = res.clone();
+                        const data = await clone.json();
+                        message = data.message || data.error || message;
+                    } catch (e) {}
+                    
+                    alert(message);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '../login.html';
+                    return new Promise(() => {}); // abort
+                }
+                
+                // Intercept json() to map message -> error
+                const originalJson = res.json;
+                res.json = async function () {
+                    try {
+                        const data = await originalJson.call(res);
+                        if (data && typeof data === 'object') {
+                            if (data.message && !data.error) {
+                                data.error = data.message;
+                            }
+                        }
+                        return data;
+                    } catch (jsonErr) {
+                        if (!res.ok) {
+                            return { error: `Server error (${res.status}).` };
+                        }
+                        throw jsonErr;
+                    }
+                };
+                return res;
+            } catch (err) {
+                throw err;
+            }
+        };
+
+        // Helper to resolve image paths
+        function resolveImagePath(path) {
+            if (!path) return '../assets/toy_placeholder.png';
+            if (path.startsWith('http://') || path.startsWith('https://')) return path;
+            let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+            if (cleanPath.startsWith('assets/')) return '../' + cleanPath;
+            return `http://localhost:3000/${cleanPath}`;
+        }
+
+        // Toggle Payment Input Fields
+        window.togglePaymentFields = function() {
+            const method = $('#paymentMethod').val();
+            
+            // Hide all sub-sections
+            $('#creditCardDetails').slideUp(200);
+            $('#paypalDetails').slideUp(200);
+            $('#bankDetails').slideUp(200);
+            
+            // Show the relevant one
+            if (method === 'Credit Card') {
+                $('#creditCardDetails').slideDown(200);
+            } else if (method === 'PayPal') {
+                $('#paypalDetails').slideDown(200);
+            } else if (method === 'Bank Transfer') {
+                $('#bankDetails').slideDown(200);
+            }
+        };
+
+        // Load saved shipping addresses
+        function loadAddresses() {
+            if (!token) return;
+
+            fetch(`${API_URL}/addresses`)
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load addresses');
+                return res.json();
+            })
+            .then(data => {
+                userAddresses = data.addresses || [];
+                updateAddressDropdown();
+            })
+            .catch(err => console.error("Addresses load error:", err));
+        }
+
+        function updateAddressDropdown() {
+            const select = $('#shippingAddressSelect');
+            select.html('<option value="custom">-- Enter a custom address --</option>');
+            
+            if (userAddresses.length > 0) {
+                userAddresses.forEach(addr => {
+                    const fullAddr = `${addr.street_address}, ${addr.city}, ${addr.province}, ${addr.zip_code}, ${addr.country}`;
+                    select.append(`<option value="${addr.address_id}">${fullAddr}</option>`);
+                });
+                
+                // Select the first address by default
+                select.val(userAddresses[0].address_id);
+                onAddressSelectChange();
+            } else {
+                select.val('custom');
+                onAddressSelectChange();
+            }
+        }
+
+        window.onAddressSelectChange = function() {
+            const selectVal = $('#shippingAddressSelect').val();
+            const addrInput = $('#shippingAddress');
+            
+            if (selectVal === 'custom') {
+                addrInput.prop('disabled', false).val('').attr('placeholder', 'Enter delivery address manually');
+            } else {
+                const selected = userAddresses.find(a => a.address_id == selectVal);
+                if (selected) {
+                    const fullAddr = `${selected.street_address}, ${selected.city}, ${selected.province}, ${selected.zip_code}, ${selected.country}`;
+                    addrInput.prop('disabled', true).val(fullAddr);
+                }
+            }
+        };
+
+        // Address Modal Handlers
+        window.openAddressModal = function() {
+            $('#modalStreet').val('');
+            $('#modalCity').val('');
+            $('#modalProvince').val('');
+            $('#modalZip').val('');
+            $('#modalCountry').val('');
+            $('#addressModal').css('display', 'flex').hide().fadeIn(200);
+        };
+
+        window.closeAddressModal = function() {
+            $('#addressModal').fadeOut(200);
+        };
+
+        window.saveAddress = function() {
+            const street = $('#modalStreet').val().trim();
+            const city = $('#modalCity').val().trim();
+            const province = $('#modalProvince').val().trim();
+            const zip = $('#modalZip').val().trim();
+            const country = $('#modalCountry').val().trim();
+
+            if (!street || !city || !province || !zip || !country) {
+                alert('Please fill in all address fields.');
+                return;
+            }
+
+            const saveBtn = $('#saveAddressBtn');
+            saveBtn.prop('disabled', true).text('Saving...');
+
+            fetch(`${API_URL}/addresses`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    street_address: street,
+                    city: city,
+                    province: province,
+                    zip_code: zip,
+                    country: country
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(data => {
+                        throw new Error(data.error || 'Failed to add address');
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('✓ Address saved successfully!');
+                    closeAddressModal();
+                    
+                    // Reload addresses list and select the new one
+                    fetch(`${API_URL}/addresses`)
+                    .then(res => res.json())
+                    .then(resData => {
+                        userAddresses = resData.addresses || [];
+                        updateAddressDropdown();
+                        if (data.address && data.address.address_id) {
+                            $('#shippingAddressSelect').val(data.address.address_id);
+                            onAddressSelectChange();
+                        }
+                    });
+                } else {
+                    throw new Error(data.error || 'Failed to add address');
+                }
+            })
+            .catch(err => {
+                alert('Error adding address: ' + err.message);
+            })
+            .finally(() => {
+                saveBtn.prop('disabled', false).text('Save Address');
+            });
+        };
+
+        // Initialize and load cart items
+        function loadCart() {
+            cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) {
+                $('#cartItemsList').empty();
+                $('#cartSummarySection').hide();
+                $('#cartEmptyState').show();
+                return;
+            }
+
+            $('#cartEmptyState').hide();
+            $('#cartSummarySection').show();
+
+            fetch(`${API_URL}/items`)
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch product catalog');
+                return res.json();
+            })
+            .then(data => {
+                const dbItems = data.rows || [];
+                renderCartItems(dbItems);
+                
+                // Pre-fill recipient name if available in session
+                if (userJson) {
+                    try {
+                        const user = JSON.parse(userJson);
+                        if (user && user.name) {
+                            const nameParts = user.name.trim().split(/\s+/);
+                            const fname = nameParts[0] || '';
+                            const lname = nameParts.slice(1).join(' ') || '';
+                            if (!$('#shippingFname').val()) $('#shippingFname').val(fname);
+                            if (!$('#shippingLname').val()) $('#shippingLname').val(lname);
+                        }
+                    } catch (e) {}
+                }
+            })
+            .catch(err => {
+                console.error("Cart load error:", err);
+                $('#cartItemsList').html('<div style="text-align: center; color: #c94a4a; font-size: 0.92rem; padding: 1.5rem 0;">Failed to load cart items. Please ensure backend server is running.</div>');
+            });
+        }
+
+        function renderCartItems(dbItems) {
+            const container = $('#cartItemsList');
+            container.empty();
+            let subtotal = 0;
+            let updatedCart = [];
+
+            cart.forEach(cartItem => {
+                const itemDetails = dbItems.find(i => i.item_id === cartItem.item_id);
+                if (!itemDetails) return; // Skip if item is no longer in the DB catalog
+
+                updatedCart.push(cartItem);
+
+                const itemPrice = parseFloat(itemDetails.sell_price);
+                const itemSubtotal = itemPrice * cartItem.quantity;
+                subtotal += itemSubtotal;
+
+                const img = resolveImagePath(itemDetails.img_path);
+                
+                container.append(`
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.8rem 1rem; background: rgba(245,239,230,0.25); border: 1px solid rgba(197,168,128,0.12); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+                            <img src="${img}" style="width: 50px; height: 50px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.15); object-fit: contain; background: #fff; flex-shrink: 0;" alt="${itemDetails.description}">
+                            <div style="min-width: 0; flex: 1;">
+                                <h4 style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">${itemDetails.description}</h4>
+                                <span style="font-size: 0.82rem; color: var(--accent-gold-dark); font-weight: 600;">$${itemPrice.toFixed(2)} each</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Quantity controls -->
+                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                            <button onclick="changeQty(${cartItem.item_id}, -1)" class="quantity-btn">-</button>
+                            <span style="font-family: var(--font-heading); font-size: 0.9rem; font-weight: 600; min-width: 20px; text-align: center; color: var(--text-primary);">${cartItem.quantity}</span>
+                            <button onclick="changeQty(${cartItem.item_id}, 1)" class="quantity-btn">+</button>
+                        </div>
+                        
+                        <!-- Subtotal & Remove -->
+                        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                            <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: var(--text-primary); min-width: 70px; text-align: right;">$${itemSubtotal.toFixed(2)}</span>
+                            <button onclick="removeItem(${cartItem.item_id})" class="remove-btn" title="Remove item">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                `);
+            });
+
+            // Update localStorage to sync with catalog in case items were deleted
+            if (updatedCart.length !== cart.length) {
+                cart = updatedCart;
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+
+            const shipping = 100.00;
+            const total = subtotal + shipping;
+
+            $('#cartSubtotal').text('$' + subtotal.toFixed(2));
+            $('#cartTotal').text('$' + total.toFixed(2));
+        }
+
+        window.changeQty = function(id, delta) {
+            const index = cart.findIndex(c => c.item_id === id);
+            if (index !== -1) {
+                cart[index].quantity += delta;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCart();
+            }
+        };
+
+        window.removeItem = function(id) {
+            cart = cart.filter(c => c.item_id !== id);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        };
+
+        window.checkoutOrder = function() {
+            if (!token) {
+                alert('Please sign in first to place an order.');
+                window.location.href = '../login.html';
+                return;
+            }
+
+            if (!userJson) {
+                alert('User profile not found. Please log in again.');
+                window.location.href = '../login.html';
+                return;
+            }
+
+            let user;
+            try {
+                user = JSON.parse(userJson);
+            } catch (e) {
+                alert('Invalid user session. Please log in again.');
+                window.location.href = '../login.html';
+                return;
+            }
+
+            if (!user || !user.id) {
+                alert('User session details are incomplete. Please log in again.');
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Checkout details validation
+            const fname = $('#shippingFname').val().trim();
+            const lname = $('#shippingLname').val().trim();
+            const address = $('#shippingAddress').val().trim();
+            const phone = $('#shippingPhone').val().trim();
+            const paymentMethod = $('#paymentMethod').val();
+
+            if (!fname || !lname) {
+                alert('Please enter recipient first and last name.');
+                return;
+            }
+            if (!address) {
+                alert('Please select or enter a delivery address.');
+                return;
+            }
+            if (!phone) {
+                alert('Please enter a contact phone number.');
+                return;
+            }
+
+            // Optional Credit Card details validation
+            if (paymentMethod === 'Credit Card') {
+                const cardNum = $('#cardNumber').val().trim();
+                const cardExp = $('#cardExpiry').val().trim();
+                const cardCvv = $('#cardCvv').val().trim();
+                if (!cardNum || !cardExp || !cardCvv) {
+                    alert('Please enter complete credit card details.');
+                    return;
+                }
+            }
+
+            const checkoutBtn = $('#checkoutBtn');
+            checkoutBtn.prop('disabled', true).text('Processing Order...');
+
+            fetch(`${API_URL}/create-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cart: cart,
+                    user: { id: user.id },
+                    fname: fname,
+                    lname: lname,
+                    phone: phone,
+                    shipping_address: address,
+                    payment_method: paymentMethod
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(data => {
+                        throw new Error(data.error || 'Failed to place order');
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('✓ Order placed successfully! Thank you for your purchase.');
+                    localStorage.removeItem('cart'); // Clear local cart
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error(data.error || 'Failed to place order');
+                }
+            })
+            .catch(err => {
+                alert('Error placing order: ' + err.message);
+                checkoutBtn.prop('disabled', false).text('Confirm and Place Order');
+            });
+        };
+
+        // Initial trigger
+        $(document).ready(function() {
+            loadCart();
+            loadAddresses();
+        });
+    </script>
 </body>
 </html>

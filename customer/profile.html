@@ -8,74 +8,455 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .profile-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: calc(var(--header-height) + 30px) 1.5rem 4rem 1.5rem;
+        }
+
+        .profile-layout-container {
+            display: grid;
+            grid-template-columns: 1fr 1.8fr;
+            gap: 2rem;
+            align-items: start;
+            margin-top: 1.5rem;
+        }
+        
+        /* Left Column: Preview Card */
+        .profile-preview-card {
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(197, 168, 128, 0.15);
+            border-radius: 18px;
+            padding: 2.8rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.02);
+            backdrop-filter: blur(10px);
+        }
+
+        .avatar-upload-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar-preview-wrapper {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-gold);
+            background: rgba(245, 239, 230, 0.45);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(197, 168, 128, 0.15);
+        }
+
+        .avatar-preview-wrapper:hover {
+            transform: scale(1.03);
+            border-color: var(--accent-gold-dark);
+        }
+
+        .avatar-preview-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(28, 28, 28, 0.65);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .avatar-preview-wrapper:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+
+        .camera-icon {
+            font-size: 1.4rem;
+        }
+
+        .upload-text {
+            font-size: 0.72rem;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .preview-name {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .preview-email {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .preview-role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(197, 168, 128, 0.12);
+            color: var(--accent-gold-dark);
+            border: 1px solid rgba(197, 168, 128, 0.22);
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-meta {
+            width: 100%;
+            border-top: 1px solid rgba(197, 168, 128, 0.12);
+            padding-top: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            text-align: left;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .meta-icon {
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .meta-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        /* Right Column: Form Card */
+        .profile-form-card {
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(197, 168, 128, 0.15);
+            border-radius: 18px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.02);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-section-title {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .form-section-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.8rem;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+        }
+
+        .btn-profile-save {
+            width: 100%;
+            background: var(--text-primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 0.85rem;
+            font-family: var(--font-heading);
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.03em;
+            margin-top: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-profile-save:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-profile-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Dynamic Navigation Header -->
     <div id="header-placeholder"></div>
 
+    <div class="profile-wrapper">
+        <div class="profile-layout-container">
+            <!-- Left Column: Profile Card Preview -->
+            <div class="profile-preview-card">
+                <div class="avatar-upload-container">
+                    <div class="avatar-preview-wrapper" onclick="triggerAvatarUpload()" title="Click to upload new photo">
+                        <img id="avatarPreview" src="../assets/toy_placeholder.png" alt="Profile Picture">
+                        <div class="avatar-upload-overlay">
+                            <span class="camera-icon">📷</span>
+                            <span class="upload-text">Change Photo</span>
+                        </div>
+                    </div>
+                </div>
+                <h2 id="previewFullName" class="preview-name">Loading...</h2>
+                <p id="previewEmail" class="preview-email">Loading...</p>
+                <span id="previewRole" class="preview-role-badge">Collector</span>
+                
+                <div class="preview-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📍</span>
+                        <span id="previewAddress" class="meta-text">No address set</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📞</span>
+                        <span id="previewPhone" class="meta-text">No phone number</span>
+                    </div>
+                </div>
+            </div>
 
-    <div class="auth-page-container" style="padding-top: 120px; height: auto;">
-        <div class="auth-card" style="max-width: 600px; width: 95%;">
-            <h2 class="auth-title">My Profile</h2>
-            <p class="auth-subtitle">Update your personal collector information and profile photo</p>
-            
-            <form class="auth-form active" id="profileForm" enctype="multipart/form-data">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="input-group">
-                        <label for="fname">First Name</label>
-                        <input type="text" id="fname" placeholder="First Name">
-                    </div>
-                    <div class="input-group">
-                        <label for="lname">Last Name</label>
-                        <input type="text" id="lname" placeholder="Last Name">
-                    </div>
-                </div>
+            <!-- Right Column: Edit Profile Form -->
+            <div class="profile-form-card">
+                <h2 class="form-section-title">Collector Details</h2>
+                <p class="form-section-subtitle">Update your personal collector information and shipping details.</p>
                 
-                <div class="input-group">
-                    <label for="addressline">Address Line</label>
-                    <input type="text" id="addressline" placeholder="Street Address">
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="input-group">
-                        <label for="zipcode">Zip Code</label>
-                        <input type="text" id="zipcode" placeholder="Zip Code">
+                <form id="profileForm" enctype="multipart/form-data">
+                    <input type="file" id="avatar" name="image" accept="image/*" style="display: none;">
+                    
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label for="fname">First Name</label>
+                            <input type="text" id="fname" placeholder="Enter first name">
+                        </div>
+                        <div class="input-group">
+                            <label for="lname">Last Name</label>
+                            <input type="text" id="lname" placeholder="Enter last name">
+                        </div>
                     </div>
+                    
                     <div class="input-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="text" id="phone" placeholder="Phone Number">
+                        <label for="addressline">Default Delivery Address</label>
+                        <input type="text" id="addressline" placeholder="Enter street address, city, country">
                     </div>
-                </div>
-                
-                <div class="input-group">
-                    <label for="avatar">Profile Avatar</label>
-                    <input type="file" id="avatar" name="image" accept="image/*" style="background-color: transparent; border: none; padding: 0.5rem 0;">
-                </div>
-                
-                <button type="submit" class="btn-auth-submit">Save Profile</button>
-            </form>
-
-            <div class="auth-back-link">
-                <a href="dashboard.html">
-                    <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
-                        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                    <span style="vertical-align: middle;">Back to Dashboard</span>
-                </a>
+                    
+                    <div class="form-row-2">
+                        <div class="input-group">
+                            <label for="zipcode">Zip Code</label>
+                            <input type="text" id="zipcode" placeholder="Enter zip code">
+                        </div>
+                        <div class="input-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="text" id="phone" placeholder="Enter phone number">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-profile-save">Save Profile Details</button>
+                </form>
             </div>
         </div>
+
+        <!-- Back Link -->
+        <div class="auth-back-link" style="text-align: center; margin-top: 2.5rem;">
+            <a href="dashboard.html">
+                <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                <span style="vertical-align: middle;">Back to Dashboard</span>
+            </a>
+        </div>
     </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="../js/header-loader.js"></script>
     <script>
-        const userJson = localStorage.getItem('user');
-        const user = userJson ? JSON.parse(userJson) : {};
+        const token = localStorage.getItem('token');
+        const API_URL = 'http://localhost:3000/api/v1';
 
+        // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
+        const originalFetch = window.fetch;
+        window.fetch = async function (resource, init) {
+            const url = typeof resource === 'string' ? resource : resource.url;
+            const currentToken = localStorage.getItem('token');
+            if (url.includes('/api/v1/') && currentToken) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    init.headers.set('Authorization', `Bearer ${currentToken}`);
+                } else {
+                    init.headers['Authorization'] = `Bearer ${currentToken}`;
+                }
+            }
+
+            try {
+                const res = await originalFetch(resource, init);
+                
+                if (res.status === 401) {
+                    let message = 'Session expired. Please log in again.';
+                    try {
+                        const clone = res.clone();
+                        const data = await clone.json();
+                        message = data.message || data.error || message;
+                    } catch (e) {}
+                    
+                    alert(message);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '../login.html';
+                    return new Promise(() => {}); // abort subsequent .then() chains
+                }
+                
+                const originalJson = res.json;
+                res.json = async function () {
+                    try {
+                        const data = await originalJson.call(res);
+                        if (data && typeof data === 'object') {
+                            if (data.message && !data.error) {
+                                data.error = data.message;
+                            }
+                        }
+                        return data;
+                    } catch (jsonErr) {
+                        if (!res.ok) {
+                            return { error: `Server error (${res.status}). Please check your backend logs.` };
+                        }
+                        throw jsonErr;
+                    }
+                };
+                
+                return res;
+            } catch (err) {
+                throw err;
+            }
+        };
+
+        // Helper to resolve image paths (local assets vs backend uploads)
+        function resolveImagePath(path) {
+            if (!path) return '../assets/toy_placeholder.png';
+            if (path.startsWith('http://') || path.startsWith('https://')) return path;
+            let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+            if (cleanPath.startsWith('assets/')) return '../' + cleanPath;
+            return `http://localhost:3000/${cleanPath}`;
+        }
+
+        // Trigger hidden file click
+        function triggerAvatarUpload() {
+            document.getElementById('avatar').click();
+        }
+
+        // Preview avatar photo instantly when selected
+        document.getElementById('avatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                if (ext !== ".jpg" && ext !== ".jpeg" && ext !== ".png") {
+                    alert("Unsupported file type! Only JPG, JPEG, and PNG images are allowed.");
+                    this.value = ''; // Reset input
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    $('#avatarPreview').attr('src', event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Load profile values on page startup
+        async function loadProfile() {
+            if (!token) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/me`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const u = data.user;
+                    const cust = u.customer || {};
+
+                    // Fill input fields
+                    document.getElementById('fname').value = cust.fname || '';
+                    document.getElementById('lname').value = cust.lname || '';
+                    document.getElementById('addressline').value = cust.addressline || '';
+                    document.getElementById('zipcode').value = cust.zipcode || '';
+                    document.getElementById('phone').value = cust.phone || '';
+
+                    // Update left panel details
+                    $('#previewFullName').text(u.name || 'Anonymous Collector');
+                    $('#previewEmail').text(u.email);
+                    $('#previewRole').text(u.role.toUpperCase() === 'ADMIN' ? 'Administrator' : 'Elite Collector');
+                    
+                    if (cust.addressline) {
+                        $('#previewAddress').text(cust.addressline);
+                    } else {
+                        $('#previewAddress').text('No address set');
+                    }
+                    if (cust.phone) {
+                        $('#previewPhone').text(cust.phone);
+                    } else {
+                        $('#previewPhone').text('No phone number');
+                    }
+
+                    // Resolve avatar image
+                    const resolvedAvatar = resolveImagePath(cust.image_path);
+                    $('#avatarPreview').attr('src', resolvedAvatar);
+
+                } else {
+                    console.error("Profile load error:", data.error);
+                }
+            } catch (err) {
+                console.error("Connection error loading profile:", err);
+            }
+        }
+
+        // Save profile modifications
         const form = document.getElementById('profileForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const submitBtn = form.querySelector('.btn-auth-submit');
-            submitBtn.innerText = "Saving...";
+            const submitBtn = form.querySelector('.btn-profile-save');
+            submitBtn.innerText = "Saving Details...";
             submitBtn.disabled = true;
 
             const formData = new FormData();
@@ -84,7 +465,6 @@
             formData.append('addressline', document.getElementById('addressline').value.trim());
             formData.append('zipcode', document.getElementById('zipcode').value.trim());
             formData.append('phone', document.getElementById('phone').value.trim());
-            formData.append('userId', user.id);
 
             const fileInput = document.getElementById('avatar');
             if (fileInput.files[0]) {
@@ -92,7 +472,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/v1/update-profile', {
+                const response = await fetch(`${API_URL}/update-profile`, {
                     method: 'POST',
                     body: formData
                 });
@@ -100,19 +480,35 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    alert("Profile updated successfully!");
+                    alert("Profile details updated successfully!");
+                    
+                    // Update user name in localStorage if changed
+                    const fname = document.getElementById('fname').value.trim();
+                    const lname = document.getElementById('lname').value.trim();
+                    if (fname && lname) {
+                        const userJson = localStorage.getItem('user');
+                        if (userJson) {
+                            const user = JSON.parse(userJson);
+                            user.name = `${fname} ${lname}`;
+                            localStorage.setItem('user', JSON.stringify(user));
+                        }
+                    }
+                    
                     window.location.href = "dashboard.html";
                 } else {
-                    alert(data.error || "Failed to update profile.");
+                    alert(data.error || "Failed to update profile details.");
                 }
             } catch (err) {
                 console.error(err);
-                alert("Connection error. Ensure the server is online.");
+                alert("Connection error saving profile details.");
             } finally {
-                submitBtn.innerText = "Save Profile";
+                submitBtn.innerText = "Save Profile Details";
                 submitBtn.disabled = false;
             }
         });
+
+        // Initialize loading
+        loadProfile();
     </script>
 </body>
 </html>

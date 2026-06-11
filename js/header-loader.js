@@ -11,6 +11,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const basePath = getBasePath();
 
+    // Redirect logged-in admin directly to the admin panel if they attempt to load customer/public pages
+    const token = localStorage.getItem('token');
+    const userJson = localStorage.getItem('user');
+    if (token && userJson) {
+        try {
+            const user = JSON.parse(userJson);
+            if (user && user.role && user.role.trim().toLowerCase() === 'admin') {
+                const path = window.location.pathname;
+                const page = path.split("/").pop() || "index.html";
+                const pageName = page.toLowerCase();
+                const adminForbiddenPages = ['index.html', '', 'shop.html', 'dashboard.html', 'cart.html', 'item.html', 'profile.html', 'deactivate.html'];
+                if (adminForbiddenPages.includes(pageName)) {
+                    window.location.href = basePath + 'admin/admin.html';
+                    return;
+                }
+            }
+        } catch (e) {}
+    }
+
     async function loadHeader() {
         const placeholder = document.getElementById('header-placeholder');
         if (!placeholder) return;
@@ -72,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const user = JSON.parse(userJson);
                 
                 // Show Admin link for administrators
-                if (user.role === 'admin') {
+                if (user.role && user.role.trim().toLowerCase() === 'admin') {
                     const navLinks = document.querySelector('.nav-links');
                     if (navLinks && !document.querySelector('.nav-link-admin')) {
                         const adminLink = document.createElement('a');
@@ -131,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             try {
                 const user = JSON.parse(userJson);
-                if (page === 'admin.html' && user.role !== 'admin') {
+                if (page === 'admin.html' && (!user.role || user.role.trim().toLowerCase() !== 'admin')) {
                     alert("Forbidden. Administrators only.");
                     window.location.href = basePath + 'index.html';
                 }

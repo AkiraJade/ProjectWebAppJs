@@ -7,7 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const userJson = localStorage.getItem('user');
     if (token && userJson) {
-        window.location.href = 'index.html';
+        try {
+            const user = JSON.parse(userJson);
+            if (user && user.role && user.role.trim().toLowerCase() === 'admin') {
+                window.location.href = 'admin/admin.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        } catch (e) {
+            window.location.href = 'index.html';
+        }
         return;
     }
 
@@ -130,7 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast(`Welcome back, ${data.user.name}!`, "success");
                     
                     setTimeout(() => {
-                        window.location.href = 'index.html';
+                        if (data.user && data.user.role && data.user.role.trim().toLowerCase() === 'admin') {
+                            window.location.href = 'admin/admin.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
                     }, 1000);
                 } else {
                     const errorMsg = data.message || data.error || "Invalid email or password.";

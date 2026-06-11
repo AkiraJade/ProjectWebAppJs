@@ -4,6 +4,15 @@ $(document).ready(function () {
     let filteredItems = [];    // After filters applied
     let shopMode = 'infinite'; // 'infinite' or 'paginate'
     
+    // Helper to resolve image paths (local assets vs backend uploads)
+    function resolveImagePath(path) {
+        if (!path) return '../assets/toy_placeholder.png';
+        if (path.startsWith('http://') || path.startsWith('https://')) return path;
+        let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        if (cleanPath.startsWith('assets/')) return '../' + cleanPath;
+        return `http://localhost:3000/${cleanPath}`;
+    }
+    
     // Filter states
     let activeCategory = 'all';
     let maxPrice = 1000;
@@ -21,16 +30,17 @@ $(document).ready(function () {
 
     // 1. Initial Load
     function loadFigurines() {
-        $.ajax({
-            url: `${API_URL}/items`,
-            type: 'GET',
-            success: function (data) {
-                allItems = data.rows || [];
-                applyFilters();
-            },
-            error: function (err) {
-                console.error("Failed to load catalog figurines:", err);
-            }
+        fetch(`${API_URL}/items`)
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to load figurines');
+            return res.json();
+        })
+        .then(data => {
+            allItems = data.rows || [];
+            applyFilters();
+        })
+        .catch(err => {
+            console.error("Failed to load catalog figurines:", err);
         });
     }
 
@@ -200,30 +210,32 @@ $(document).ready(function () {
         }
 
         searchTimeout = setTimeout(() => {
-            $.ajax({
-                url: `${API_URL}/search?q=${encodeURIComponent(query)}`,
-                type: 'GET',
-                success: function (res) {
-                    resultsBox.empty().show();
-                    const list = res.items || [];
-                    if (list.length === 0) {
-                        resultsBox.append('<div style="padding: 10px 15px; color:#7a7a7a; font-size:0.85rem;">No results found</div>');
-                        return;
-                    }
-                    list.forEach(item => {
-                        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
-                        resultsBox.append(`
-                            <div class="autocomplete-item" onclick="selectSearchFigurine(${item.item_id}, '${escapeQuote(item.description)}')" style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s ease; border-bottom: 1px solid #f4eedc;">
-                                <img src="${img}" style="width: 30px; height: 30px; border-radius: 4px; border: 1px solid #c5a880;" alt="thumb">
-                                <div>
-                                    <div style="font-size: 0.9rem; font-weight:600; color:#1c1c1c;">${item.description}</div>
-                                    <div style="font-size: 0.75rem; color: #c5a880; font-weight:500;">$${parseFloat(item.sell_price).toFixed(2)}</div>
-                                </div>
-                            </div>
-                        `);
-                    });
+            fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Search failed');
+                return res.json();
+            })
+            .then(res => {
+                resultsBox.empty().show();
+                const list = res.items || [];
+                if (list.length === 0) {
+                    resultsBox.append('<div style="padding: 10px 15px; color:#7a7a7a; font-size:0.85rem;">No results found</div>');
+                    return;
                 }
-            });
+                list.forEach(item => {
+                    const img = resolveImagePath(item.img_path);
+                    resultsBox.append(`
+                        <div class="autocomplete-item" onclick="selectSearchFigurine(${item.item_id}, '${escapeQuote(item.description)}')" style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s ease; border-bottom: 1px solid #f4eedc;">
+                            <img src="${img}" style="width: 30px; height: 30px; border-radius: 4px; border: 1px solid #c5a880;" alt="thumb">
+                            <div>
+                                <div style="font-size: 0.9rem; font-weight:600; color:#1c1c1c;">${item.description}</div>
+                                <div style="font-size: 0.75rem; color: #c5a880; font-weight:500;">$${parseFloat(item.sell_price).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            })
+            .catch(err => console.error(err));
         }, 300);
     });
 
@@ -231,16 +243,18 @@ $(document).ready(function () {
         $('#shopSearchInput').val(name);
         $('#shopAutocompleteResults').hide().empty();
         
-        $.ajax({
-            url: `${API_URL}/items/${id}`,
-            type: 'GET',
-            success: function (res) {
-                if (res.success && res.result.length > 0) {
-                    allItems = res.result;
-                    applyFilters();
-                }
+        fetch(`${API_URL}/items/${id}`)
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to load item');
+            return res.json();
+        })
+        .then(res => {
+            if (res.success && res.result.length > 0) {
+                allItems = res.result;
+                applyFilters();
             }
-        });
+        })
+        .catch(err => console.error(err));
     };
 
     $(document).on('click', function (e) {
@@ -288,7 +302,7 @@ $(document).ready(function () {
     // 8. CARD TEMPLATE
     // --------------------------------------------------------
     function createProductCard(item) {
-        const img = item.img_path ? `http://localhost:3000/${item.img_path}` : '../assets/toy_placeholder.png';
+        const img = resolveImagePath(item.img_path);
         const price = parseFloat(item.sell_price).toFixed(2);
         
         return `

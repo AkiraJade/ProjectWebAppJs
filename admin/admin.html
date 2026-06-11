@@ -14,7 +14,7 @@
         } else {
             try {
                 const user = JSON.parse(userJson);
-                if (user.role !== 'admin') {
+                if (!user || !user.role || user.role.trim().toLowerCase() !== 'admin') {
                     alert("Forbidden. Administrators only.");
                     window.location.href = '../index.html';
                 }
@@ -507,6 +507,49 @@
             color: var(--text-primary);
             text-align: center;
         }
+
+        /* Admin Edit Current Images Thumbnails */
+        .admin-img-thumb {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            border: 1px solid rgba(197, 168, 128, 0.25);
+            background: rgba(245, 239, 230, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .admin-img-thumb img {
+            max-width: 85%;
+            max-height: 85%;
+            object-fit: contain;
+        }
+        .admin-img-thumb .remove-thumb-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            background: rgba(201, 74, 74, 0.85);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            transition: background 0.2s ease;
+        }
+        .admin-img-thumb .remove-thumb-btn:hover {
+            background: rgba(201, 74, 74, 1);
+        }
     </style>
 </head>
 <body>
@@ -559,6 +602,14 @@
                     <div class="menu-item-left">
                         <span class="menu-item-icon">📊</span>
                         <span>Analytics</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-trash" onclick="switchTab('trash-tab')">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🗑️</span>
+                        <span>Trash Bin</span>
                     </div>
                     <span class="menu-item-arrow">→</span>
                 </a>
@@ -670,6 +721,43 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tab 5: Trash Bin -->
+                    <div id="trash-tab" class="tab-content">
+                        <div style="margin-bottom: 2.5rem;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Soft-Deleted Toy Figurines</h3>
+                            <table id="deletedFigurinesTable" class="dataTable display" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Description</th>
+                                        <th>Cost Price</th>
+                                        <th>Sell Price</th>
+                                        <th>Stock Qty</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <div>
+                            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Deactivated Collector Accounts</h3>
+                            <table id="deletedUsersTable" class="dataTable display" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Birth Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
@@ -733,8 +821,12 @@
                     <label for="editQty">Stock Quantity</label>
                     <input type="number" id="editQty" required>
                 </div>
+                <div class="input-group" id="editCurrentImagesGroup" style="display: none;">
+                    <label>Current Images (Click &times; to remove)</label>
+                    <div id="editCurrentImages" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; margin-bottom: 0.5rem;"></div>
+                </div>
                 <div class="input-group">
-                    <label for="editFiles">Replace Images (Optional, accepts multiple)</label>
+                    <label for="editFiles">Add More Images (Optional, accepts multiple)</label>
                     <input type="file" id="editFiles" name="images" accept="image/*" multiple style="background:none; border:none; padding:0;">
                 </div>
                 <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Save Changes</button>
@@ -746,7 +838,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- Admin page controller script -->
-    <script src="../js/admin.js"></script>
+    <script src="../js/admin.js?v=1.0.1"></script>
     <script>
         function switchTab(tabId) {
             $('.menu-item').removeClass('active');
@@ -757,6 +849,7 @@
             else if (tabId === 'users-tab') $('#menu-users').addClass('active');
             else if (tabId === 'transactions-tab') $('#menu-transactions').addClass('active');
             else if (tabId === 'analytics-tab') $('#menu-analytics').addClass('active');
+            else if (tabId === 'trash-tab') $('#menu-trash').addClass('active');
             
             $('#' + tabId).addClass('active');
             
@@ -765,6 +858,7 @@
             if (tabId === 'users-tab') title = 'User Collector Accounts';
             else if (tabId === 'transactions-tab') title = 'Payments & Invoicing';
             else if (tabId === 'analytics-tab') title = 'Analytics Charts';
+            else if (tabId === 'trash-tab') title = 'Trash Bin (Soft-Deleted Data)';
             $('#current-tab-title').text(title);
             
             // Re-render DataTables sizing adjust if needed
@@ -774,6 +868,9 @@
                 $('#transactionsTable').DataTable().columns.adjust().draw();
             } else if (tabId === 'figurines-tab') {
                 $('#figurinesTable').DataTable().columns.adjust().draw();
+            } else if (tabId === 'trash-tab') {
+                $('#deletedFigurinesTable').DataTable().columns.adjust().draw();
+                $('#deletedUsersTable').DataTable().columns.adjust().draw();
             }
         }
 
