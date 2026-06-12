@@ -550,6 +550,82 @@
         .admin-img-thumb .remove-thumb-btn:hover {
             background: rgba(201, 74, 74, 1);
         }
+
+        /* Tag styling system */
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            background-color: rgba(245, 239, 230, 0.4);
+            border: 1px solid rgba(197, 168, 128, 0.25);
+            border-radius: 8px;
+            padding: 0.5rem;
+            align-items: center;
+            min-height: 42px;
+        }
+        .tag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background-color: #ffffff;
+            color: var(--text-primary);
+            border: 1px solid rgba(197, 168, 128, 0.35);
+            border-radius: 999px;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.8rem;
+            font-family: var(--font-body);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+        .tag-badge .tag-hash {
+            font-weight: 700;
+            color: var(--accent-gold-dark);
+            font-size: 0.85rem;
+        }
+        .tag-badge .tag-text {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .tag-badge .remove-tag {
+            cursor: pointer;
+            font-weight: 700;
+            margin-left: 0.2rem;
+            color: #c94a4a;
+            opacity: 0.7;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 0.95rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tag-badge .remove-tag:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+        .tag-input-container:focus-within {
+            border-color: var(--accent-gold) !important;
+            background-color: rgba(245, 239, 230, 0.7) !important;
+        }
+        .input-group input.tag-input-field {
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            width: auto !important;
+            flex: 1 !important;
+            min-width: 120px !important;
+            font-size: 0.9rem !important;
+            padding: 0.2rem 0.5rem !important;
+            color: var(--text-primary) !important;
+            height: auto !important;
+            box-shadow: none !important;
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -791,6 +867,27 @@
                     <label for="addFiles">Upload Images (Accepts multiple, max 5)</label>
                     <input type="file" id="addFiles" name="images" accept="image/*" multiple style="background:none; border:none; padding:0;">
                 </div>
+                <div class="input-group">
+                    <label>Categories</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="addCategories" value="hirono" style="width: auto; height: auto; margin: 0;"> Hirono Series
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="addCategories" value="limited" style="width: auto; height: auto; margin: 0;"> Limited Edition
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="addCategories" value="new" style="width: auto; height: auto; margin: 0;"> New Arrivals
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Tags</label>
+                    <div class="tag-input-container" id="addTagInputContainer">
+                        <div class="tag-badges-wrapper" id="addTagBadges"></div>
+                        <input type="text" class="tag-input-field" id="addTagInputField" placeholder="Type tag and press Space to add...">
+                    </div>
+                </div>
                 <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Create Figurine</button>
             </form>
         </div>
@@ -829,6 +926,27 @@
                     <label for="editFiles">Add More Images (Optional, accepts multiple)</label>
                     <input type="file" id="editFiles" name="images" accept="image/*" multiple style="background:none; border:none; padding:0;">
                 </div>
+                <div class="input-group">
+                    <label>Categories</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="editCategories" value="hirono" style="width: auto; height: auto; margin: 0;"> Hirono Series
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="editCategories" value="limited" style="width: auto; height: auto; margin: 0;"> Limited Edition
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
+                            <input type="checkbox" name="editCategories" value="new" style="width: auto; height: auto; margin: 0;"> New Arrivals
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Tags</label>
+                    <div class="tag-input-container" id="editTagInputContainer">
+                        <div class="tag-badges-wrapper" id="editTagBadges"></div>
+                        <input type="text" class="tag-input-field" id="editTagInputField" placeholder="Type tag and press Space to add...">
+                    </div>
+                </div>
                 <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Save Changes</button>
             </form>
         </div>
@@ -838,7 +956,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- Admin page controller script -->
-    <script src="../js/admin.js?v=1.0.1"></script>
+    <script src="../js/admin.js?v=1.0.4"></script>
     <script>
         function switchTab(tabId) {
             $('.menu-item').removeClass('active');

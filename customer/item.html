@@ -294,6 +294,34 @@
             object-fit: contain;
         }
 
+        /* Tag styling */
+        .product-tag-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background-color: #ffffff;
+            color: var(--text-primary);
+            border: 1px solid rgba(197, 168, 128, 0.35);
+            border-radius: 999px;
+            padding: 0.25rem 0.7rem;
+            font-size: 0.78rem;
+            font-family: var(--font-body);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .product-tag-pill:hover {
+            border-color: var(--accent-gold);
+            transform: translateY(-1px);
+        }
+        .product-tag-pill .tag-hash {
+            font-weight: 700;
+            color: var(--accent-gold-dark);
+        }
+        .product-tag-pill .tag-text {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
         /* Responsive */
         @media (max-width: 768px) {
             .product-detail { grid-template-columns: 1fr; }
@@ -323,6 +351,7 @@
                 <div class="product-meta">
                     Availability: <strong id="productAvailability">—</strong>
                 </div>
+                <div id="productTagsContainer" style="display: none; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.2rem; margin-bottom: 0.5rem;"></div>
                 <div class="product-actions">
                     <button class="btn-add-cart" id="addToCartBtn" onclick="addToCart()">Add to Cart</button>
                     <button class="btn-wishlist" id="wishlistBtn" onclick="toggleWishlist()" title="Add to Wishlist">
@@ -525,6 +554,23 @@
                     } else {
                         $('#productAvailability').css('color', '#c94a4a').text('Out of Stock');
                         $('#addToCartBtn').prop('disabled', true).css('opacity', '0.4').text('Out of Stock');
+                    }
+
+                    // Populate tags
+                    const tagsContainer = $('#productTagsContainer');
+                    tagsContainer.empty().hide();
+                    if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
+                        item.tags.forEach(t => {
+                            const tagClean = t.trim().toLowerCase();
+                            if (!tagClean) return;
+                            tagsContainer.append(`
+                                <span class="product-tag-pill">
+                                    <span class="tag-hash">#</span>
+                                    <span class="tag-text">${escapeHTML(tagClean)}</span>
+                                </span>
+                            `);
+                        });
+                        tagsContainer.css('display', 'flex');
                     }
 
                     // Load reviews and wishlist state

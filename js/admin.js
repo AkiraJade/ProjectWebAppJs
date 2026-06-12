@@ -37,6 +37,98 @@ $(document).ready(function () {
         renderEditThumbnails();
     };
 
+    // --- Dynamic Tag & Category Editor System ---
+    let addModalTags = [];
+    let editModalTags = [];
+
+    function renderAddCustomTags() {
+        const wrapper = $('#addTagBadges');
+        wrapper.empty();
+        addModalTags.forEach((tag, idx) => {
+            wrapper.append(`
+                <span class="tag-badge">
+                    <span class="tag-hash">#</span>
+                    <span class="tag-text">${tag}</span>
+                    <span class="remove-tag" onclick="removeAddCustomTag(${idx})">&times;</span>
+                </span>
+            `);
+        });
+    }
+
+    window.removeAddCustomTag = function(idx) {
+        addModalTags.splice(idx, 1);
+        renderAddCustomTags();
+    };
+
+    function renderEditCustomTags() {
+        const wrapper = $('#editTagBadges');
+        wrapper.empty();
+        editModalTags.forEach((tag, idx) => {
+            wrapper.append(`
+                <span class="tag-badge">
+                    <span class="tag-hash">#</span>
+                    <span class="tag-text">${tag}</span>
+                    <span class="remove-tag" onclick="removeEditCustomTag(${idx})">&times;</span>
+                </span>
+            `);
+        });
+    }
+
+    window.removeEditCustomTag = function(idx) {
+        editModalTags.splice(idx, 1);
+        renderEditCustomTags();
+    };
+
+    function getAddModalTags() {
+        return addModalTags;
+    }
+
+    function getEditModalTags() {
+        return editModalTags;
+    }
+
+    function getAddModalCategories() {
+        const categories = [];
+        $('input[name="addCategories"]:checked').each(function() {
+            categories.push($(this).val());
+        });
+        return categories;
+    }
+
+    function getEditModalCategories() {
+        const categories = [];
+        $('input[name="editCategories"]:checked').each(function() {
+            categories.push($(this).val());
+        });
+        return categories;
+    }
+
+    // Space / Enter delimiter listening
+    $('#addTagInputField').on('keydown', function(e) {
+        if (e.key === ' ' || e.key === 'Enter' || e.keyCode === 32 || e.which === 32 || e.keyCode === 13 || e.which === 13) {
+            e.preventDefault();
+            const val = $(this).val().trim().toLowerCase();
+            if (val && !addModalTags.includes(val)) {
+                addModalTags.push(val);
+                renderAddCustomTags();
+            }
+            $(this).val('');
+        }
+    });
+
+    $('#editTagInputField').on('keydown', function(e) {
+        if (e.key === ' ' || e.key === 'Enter' || e.keyCode === 32 || e.which === 32 || e.keyCode === 13 || e.which === 13) {
+            e.preventDefault();
+            const val = $(this).val().trim().toLowerCase();
+            if (val && !editModalTags.includes(val)) {
+                editModalTags.push(val);
+                renderEditCustomTags();
+            }
+            $(this).val('');
+        }
+    });
+    // --- End Dynamic Tag & Category Editor System ---
+
     // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
     const originalFetch = window.fetch;
     window.fetch = async function (resource, init) {
@@ -342,6 +434,8 @@ $(document).ready(function () {
         formData.append('cost_price', $('#addCost').val());
         formData.append('sell_price', $('#addSell').val());
         formData.append('quantity', $('#addQty').val());
+        formData.append('tags', JSON.stringify(getAddModalTags()));
+        formData.append('category', JSON.stringify(getAddModalCategories()));
 
         const fileInput = document.getElementById('addFiles');
         if (fileInput.files.length > 0) {
@@ -379,6 +473,8 @@ $(document).ready(function () {
         formData.append('cost_price', $('#editCost').val());
         formData.append('sell_price', $('#editSell').val());
         formData.append('quantity', $('#editQty').val());
+        formData.append('tags', JSON.stringify(getEditModalTags()));
+        formData.append('category', JSON.stringify(getEditModalCategories()));
         formData.append('keep_images', JSON.stringify(editKeptImages));
 
         const fileInput = document.getElementById('editFiles');
@@ -473,6 +569,27 @@ $(document).ready(function () {
                     });
                 }
                 renderEditThumbnails();
+
+                // Prepopulate categories checkboxes
+                $('input[name="editCategories"]').prop('checked', false);
+                if (item.category && Array.isArray(item.category)) {
+                    item.category.forEach(c => {
+                        const catClean = c.trim().toLowerCase();
+                        $(`input[name="editCategories"][value="${catClean}"]`).prop('checked', true);
+                    });
+                }
+
+                // Prepopulate custom tags
+                editModalTags = [];
+                if (item.tags && Array.isArray(item.tags)) {
+                    item.tags.forEach(t => {
+                        const tagClean = t.trim().toLowerCase();
+                        if (tagClean && !editModalTags.includes(tagClean)) {
+                            editModalTags.push(tagClean);
+                        }
+                    });
+                }
+                renderEditCustomTags();
 
                 $('#editModal').addClass('active');
             }
@@ -684,10 +801,20 @@ $(document).ready(function () {
     // --------------------------------------------------------
     // 6. MODAL UTILITIES
     // --------------------------------------------------------
-    window.openAddModal = () => $('#addModal').addClass('active');
+    window.openAddModal = () => {
+        addModalTags = [];
+        $('input[name="addCategories"]').prop('checked', false);
+        $('#addTagInputField').val('');
+        renderAddCustomTags();
+        $('#addModal').addClass('active');
+    };
     window.closeAddModal = () => {
         $('#addModal').removeClass('active');
         $('#addForm')[0].reset();
+        addModalTags = [];
+        $('input[name="addCategories"]').prop('checked', false);
+        $('#addTagInputField').val('');
+        renderAddCustomTags();
     };
 
     window.closeEditModal = () => {
@@ -696,5 +823,9 @@ $(document).ready(function () {
         $('#editCurrentImages').empty();
         $('#editCurrentImagesGroup').hide();
         editKeptImages = [];
+        editModalTags = [];
+        $('input[name="editCategories"]').prop('checked', false);
+        $('#editTagInputField').val('');
+        renderEditCustomTags();
     };
 });

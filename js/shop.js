@@ -26,7 +26,7 @@ $(document).ready(function () {
 
     // Pagination State
     let currentPage = 1;
-    const itemsPerPage = 4;
+    const itemsPerPage = 9;
 
     // 1. Initial Load
     function loadFigurines() {
@@ -48,14 +48,13 @@ $(document).ready(function () {
     function applyFilters() {
         filteredItems = allItems.slice(); // copy
 
-        // Category filter (client-side — all items are "Hirono Series" in this demo)
+        // Category filter (database-supplied categories filtering)
         if (activeCategory === 'hirono') {
-            filteredItems = filteredItems.filter(i => i.description.toLowerCase().includes('hirono'));
+            filteredItems = filteredItems.filter(i => i.category && i.category.includes('hirono'));
         } else if (activeCategory === 'limited') {
-            filteredItems = filteredItems.filter(i => parseFloat(i.sell_price) >= 500);
+            filteredItems = filteredItems.filter(i => i.category && i.category.includes('limited'));
         } else if (activeCategory === 'new') {
-            // Show last 4 items as "new arrivals"
-            filteredItems = filteredItems.slice(-4);
+            filteredItems = filteredItems.filter(i => i.category && i.category.includes('new'));
         }
 
         // Price filter
