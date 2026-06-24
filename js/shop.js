@@ -321,18 +321,7 @@ $(document).ready(function () {
         `;
     }
 
-    // Mode toggle
-    window.setShopMode = function (mode) {
-        shopMode = mode;
-        if (mode === 'infinite') {
-            $('#modeInfiniteBtn').addClass('active');
-            $('#modePaginateBtn').removeClass('active');
-        } else {
-            $('#modePaginateBtn').addClass('active');
-            $('#modeInfiniteBtn').removeClass('active');
-        }
-        renderShop();
-    };
+
 
     function escapeQuote(str) {
         return str.replace(/'/g, "\\'");
