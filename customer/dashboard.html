@@ -266,10 +266,21 @@
 
         /* Recently Viewed */
         .recently-viewed-grid {
-            display: flex;
-            gap: 1rem;
-            overflow-x: auto;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.2rem;
             padding-bottom: 0.5rem;
+        }
+        .toy-catalog-card {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .toy-catalog-card:hover {
+            border-color: var(--accent-gold) !important;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(197, 168, 128, 0.15) !important;
+        }
+        .toy-catalog-card:hover .card-img {
+            transform: scale(1.05);
         }
 
         /* Need Help Section */
@@ -351,9 +362,11 @@
             .dash-grid { grid-template-columns: 1fr; }
             .help-cards { grid-template-columns: 1fr; }
             .dash-welcome h1 { font-size: 1.3rem; }
+            .recently-viewed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 480px) {
             .dash-stats { grid-template-columns: 1fr; }
+            .recently-viewed-grid { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
 </head>
@@ -369,7 +382,7 @@
             <p>Your personalized collector dashboard</p>
             <div class="dash-welcome-actions">
                 <button class="dash-btn primary" onclick="window.location.href='shop.html'">Continue Shopping</button>
-                <button class="dash-btn outline" onclick="window.location.href='profile.html'">Edit Profile</button>
+                <button class="dash-btn outline" onclick="document.getElementById('wishlistContainer').scrollIntoView({ behavior: 'smooth' })">View Wishlist</button>
             </div>
         </div>
 
@@ -432,7 +445,7 @@
                             <span>Edit your information</span>
                         </div>
                     </a>
-                    <a href="profile.html" class="account-link-item">
+                    <a href="profile.html#changePasswordSection" class="account-link-item">
                         <div class="link-icon" style="background: rgba(197,168,128,0.12);">🔒</div>
                         <div class="link-text">
                             <strong>Password</strong>
@@ -482,36 +495,10 @@
         <!-- ===== Recently Viewed ===== -->
         <div class="dash-panel" style="margin-bottom: 1.5rem;">
             <h3>Recently Viewed</h3>
-            <div class="empty-state" style="padding: 1.2rem;">
-                <p style="margin-bottom: 0;">No items viewed yet</p>
-            </div>
-        </div>
-
-        <!-- ===== Need Help ===== -->
-        <div class="help-section">
-            <h3>Need Help?</h3>
-            <div class="help-cards">
-                <a href="mailto:support@littlemono.com" class="help-card">
-                    <div class="help-icon" style="background: rgba(197,168,128,0.12);">💬</div>
-                    <div class="help-text">
-                        <strong>Contact Support</strong>
-                        <span>Response within 24 hours</span>
-                    </div>
-                </a>
-                <a href="#" class="help-card">
-                    <div class="help-icon" style="background: rgba(197,168,128,0.12);">📖</div>
-                    <div class="help-text">
-                        <strong>Knowledge Base</strong>
-                        <span>FAQs and guides</span>
-                    </div>
-                </a>
-                <a href="#" class="help-card">
-                    <div class="help-icon" style="background: rgba(197,168,128,0.12);">🗨️</div>
-                    <div class="help-text">
-                        <strong>Live Chat</strong>
-                        <span>Chat with our team</span>
-                    </div>
-                </a>
+            <div id="recentlyViewedContainer" class="recently-viewed-grid">
+                <div class="empty-state" style="padding: 1.2rem; width: 100%;">
+                    <p style="margin-bottom: 0;">No items viewed yet</p>
+                </div>
             </div>
         </div>
 
@@ -737,6 +724,45 @@
             .catch(err => {
                 $('#wishlistContainer').html('<div class="empty-state"><p>Could not load wishlist.</p></div>');
             });
+
+            // ===== Load Recently Viewed =====
+            const rvc = $('#recentlyViewedContainer');
+            if (rvc.length) {
+                rvc.empty();
+                try {
+                    const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+                    if (recentlyViewed.length === 0) {
+                        rvc.html(`
+                            <div class="empty-state" style="padding: 1.2rem; width: 100%;">
+                                <p style="margin-bottom: 0;">No items viewed yet</p>
+                            </div>
+                        `);
+                    } else {
+                        recentlyViewed.forEach(item => {
+                            const img = resolveImagePath(item.img_path);
+                            const price = parseFloat(item.sell_price).toFixed(2);
+                            rvc.append(`
+                                <div class="toy-catalog-card" onclick="window.location.href='item.html?id=${item.item_id}'" style="width: 100%; background: #ffffff; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 12px rgba(0,0,0,0.01); min-width: 0;">
+                                    <div style="width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; background: rgba(245, 239, 230, 0.35); border: 1px solid rgba(197, 168, 128, 0.1); display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                                        <img src="${img}" style="max-height: 85%; max-width: 85%; object-fit: contain; transition: transform 0.4s ease;" class="card-img" alt="${item.description}">
+                                    </div>
+                                    <div style="text-align: left;">
+                                        <span style="font-family: var(--font-heading); font-size: 0.7rem; color: var(--accent-gold-dark); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Hirono Series</span>
+                                        <h4 style="font-family: var(--font-heading); font-size: 0.9rem; color: var(--text-primary); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;">${item.description}</h4>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.3rem;">
+                                            <span style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">$${price}</span>
+                                            <span style="font-size: 0.7rem; color: ${item.quantity > 0 ? '#2e7d32' : '#c94a4a'}; font-weight: 600;">${item.quantity > 0 ? 'In Stock' : 'Out of Stock'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Failed to load recently viewed items:", e);
+                    rvc.html('<div class="empty-state" style="padding: 1.2rem; width: 100%;"><p>Could not load recently viewed items.</p></div>');
+                }
+            }
         });
 
         function removeFromWishlist(itemId) {

@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
         .profile-wrapper {
             max-width: 1000px;
             margin: 0 auto;
@@ -164,6 +167,13 @@
             backdrop-filter: blur(10px);
         }
 
+        .profile-right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 0;
+        }
+
         .form-section-title {
             font-family: var(--font-heading);
             font-size: 1.35rem;
@@ -217,6 +227,27 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Disabled Input Styles & Locked Avatar Preview Styles */
+        .input-group input:disabled {
+            background-color: rgba(28, 28, 28, 0.05) !important;
+            border-color: rgba(197, 168, 128, 0.12) !important;
+            color: var(--text-secondary) !important;
+            cursor: not-allowed;
+        }
+        
+        .avatar-preview-wrapper.locked {
+            cursor: default !important;
+            border-color: rgba(197, 168, 128, 0.25) !important;
+            box-shadow: none !important;
+        }
+        .avatar-preview-wrapper.locked:hover {
+            transform: none !important;
+            border-color: rgba(197, 168, 128, 0.25) !important;
+        }
+        .avatar-preview-wrapper.locked:hover .avatar-upload-overlay {
+            opacity: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -228,7 +259,7 @@
             <!-- Left Column: Profile Card Preview -->
             <div class="profile-preview-card">
                 <div class="avatar-upload-container">
-                    <div class="avatar-preview-wrapper" onclick="triggerAvatarUpload()" title="Click to upload new photo">
+                    <div id="avatarPreviewWrapper" class="avatar-preview-wrapper locked" onclick="triggerAvatarUpload()" title="Profile Picture">
                         <img id="avatarPreview" src="../assets/toy_placeholder.png" alt="Profile Picture">
                         <div class="avatar-upload-overlay">
                             <span class="camera-icon">📷</span>
@@ -252,43 +283,73 @@
                 </div>
             </div>
 
-            <!-- Right Column: Edit Profile Form -->
-            <div class="profile-form-card">
-                <h2 class="form-section-title">Collector Details</h2>
-                <p class="form-section-subtitle">Update your personal collector information and shipping details.</p>
-                
-                <form id="profileForm" enctype="multipart/form-data">
-                    <input type="file" id="avatar" name="image" accept="image/*" style="display: none;">
+            <!-- Right Column: Forms -->
+            <div class="profile-right-column">
+                <div class="profile-form-card">
+                    <h2 class="form-section-title">Collector Details</h2>
+                    <p class="form-section-subtitle">Update your personal collector information and shipping details.</p>
                     
-                    <div class="form-row-2">
-                        <div class="input-group">
-                            <label for="fname">First Name</label>
-                            <input type="text" id="fname" placeholder="Enter first name">
+                    <form id="profileForm" enctype="multipart/form-data">
+                        <input type="file" id="avatar" name="image" accept="image/*" style="display: none;">
+                        
+                        <div class="form-row-2">
+                            <div class="input-group">
+                                <label for="fname">First Name</label>
+                                <input type="text" id="fname" placeholder="Enter first name" disabled>
+                            </div>
+                            <div class="input-group">
+                                <label for="lname">Last Name</label>
+                                <input type="text" id="lname" placeholder="Enter last name" disabled>
+                            </div>
                         </div>
+                        
                         <div class="input-group">
-                            <label for="lname">Last Name</label>
-                            <input type="text" id="lname" placeholder="Enter last name">
+                            <label for="addressline">Default Delivery Address</label>
+                            <input type="text" id="addressline" placeholder="Enter street address, city, country" disabled>
                         </div>
-                    </div>
+                        
+                        <div class="form-row-2">
+                            <div class="input-group">
+                                <label for="zipcode">Zip Code</label>
+                                <input type="text" id="zipcode" placeholder="Enter zip code" disabled>
+                            </div>
+                            <div class="input-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="text" id="phone" placeholder="Enter phone number" disabled>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; margin-top: 1.2rem;">
+                            <button type="button" id="toggleEditBtn" class="btn-profile-save" style="margin-top: 0; flex: 1;">Edit Profile</button>
+                            <button type="button" id="cancelEditBtn" class="btn-profile-save outline" style="margin-top: 0; flex: 1; display: none; background: transparent; border: 1px solid rgba(28,28,28,0.15); color: var(--text-primary);">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Change Password Card -->
+                <div class="profile-form-card" id="changePasswordSection">
+                    <h2 class="form-section-title">Change Password</h2>
+                    <p class="form-section-subtitle">Update your password to keep your account secure.</p>
                     
-                    <div class="input-group">
-                        <label for="addressline">Default Delivery Address</label>
-                        <input type="text" id="addressline" placeholder="Enter street address, city, country">
-                    </div>
-                    
-                    <div class="form-row-2">
+                    <form id="changePasswordForm">
                         <div class="input-group">
-                            <label for="zipcode">Zip Code</label>
-                            <input type="text" id="zipcode" placeholder="Enter zip code">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password" required autocomplete="current-password">
                         </div>
-                        <div class="input-group">
-                            <label for="phone">Phone Number</label>
-                            <input type="text" id="phone" placeholder="Enter phone number">
+                        
+                        <div class="input-group" style="margin-top: 1.2rem;">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" placeholder="Enter new password" required autocomplete="new-password">
                         </div>
-                    </div>
-                    
-                    <button type="submit" class="btn-profile-save">Save Profile Details</button>
-                </form>
+
+                        <div class="input-group" style="margin-top: 1.2rem;">
+                            <label for="confirmNewPassword">Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" placeholder="Confirm new password" required autocomplete="new-password">
+                        </div>
+                        
+                        <button type="submit" class="btn-profile-save" id="savePasswordBtn" style="margin-top: 1.5rem;">Update Password</button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -376,8 +437,14 @@
             return `http://localhost:3000/${cleanPath}`;
         }
 
+        let isEditMode = false;
+
         // Trigger hidden file click
         function triggerAvatarUpload() {
+            if (!isEditMode) {
+                alert("Please click 'Edit Profile' first to change your profile picture.");
+                return;
+            }
             document.getElementById('avatar').click();
         }
 
@@ -398,6 +465,40 @@
                 };
                 reader.readAsDataURL(file);
             }
+        });
+
+        // Toggle edit modes and cancel logic
+        const toggleEditBtn = document.getElementById('toggleEditBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const inputs = ['fname', 'lname', 'addressline', 'zipcode', 'phone'];
+
+        toggleEditBtn.addEventListener('click', function(e) {
+            if (!isEditMode) {
+                // Enter Edit Mode
+                isEditMode = true;
+                inputs.forEach(id => document.getElementById(id).disabled = false);
+                $('#avatarPreviewWrapper').removeClass('locked').attr('title', 'Click to upload new photo');
+                toggleEditBtn.innerText = "Save Profile Details";
+                $('#cancelEditBtn').show();
+            } else {
+                // Trigger form submission manually without changing button type
+                form.requestSubmit();
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', function() {
+            // Exit Edit Mode
+            isEditMode = false;
+            inputs.forEach(id => document.getElementById(id).disabled = true);
+            $('#avatarPreviewWrapper').addClass('locked').attr('title', 'Profile Picture');
+            toggleEditBtn.innerText = "Edit Profile";
+            $('#cancelEditBtn').hide();
+            
+            // Clear selected file preview
+            document.getElementById('avatar').value = '';
+            
+            // Reload original profile details
+            loadProfile();
         });
 
         // Load profile values on page startup
@@ -449,15 +550,17 @@
                 console.error("Connection error loading profile:", err);
             }
         }
-
         // Save profile modifications
         const form = document.getElementById('profileForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!isEditMode) return;
 
-            const submitBtn = form.querySelector('.btn-profile-save');
+            const submitBtn = document.getElementById('toggleEditBtn');
+            const cancelBtn = document.getElementById('cancelEditBtn');
             submitBtn.innerText = "Saving Details...";
             submitBtn.disabled = true;
+            cancelBtn.disabled = true;
 
             const formData = new FormData();
             formData.append('fname', document.getElementById('fname').value.trim());
@@ -482,6 +585,16 @@
                 if (response.ok && data.success) {
                     alert("Profile details updated successfully!");
                     
+                    // Exit edit mode
+                    isEditMode = false;
+                    inputs.forEach(id => document.getElementById(id).disabled = true);
+                    $('#avatarPreviewWrapper').addClass('locked').attr('title', 'Profile Picture');
+                    submitBtn.innerText = "Edit Profile";
+                    $('#cancelEditBtn').hide();
+                    
+                    // Clear selected file input
+                    fileInput.value = '';
+
                     // Update user name in localStorage if changed
                     const fname = document.getElementById('fname').value.trim();
                     const lname = document.getElementById('lname').value.trim();
@@ -494,7 +607,8 @@
                         }
                     }
                     
-                    window.location.href = "dashboard.html";
+                    // Reload profile details to refresh panel
+                    loadProfile();
                 } else {
                     alert(data.error || "Failed to update profile details.");
                 }
@@ -502,8 +616,58 @@
                 console.error(err);
                 alert("Connection error saving profile details.");
             } finally {
-                submitBtn.innerText = "Save Profile Details";
+                submitBtn.innerText = isEditMode ? "Save Profile Details" : "Edit Profile";
                 submitBtn.disabled = false;
+                cancelBtn.disabled = false;
+            }
+        });
+
+        // Change Password Form Submission
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword.length < 6) {
+                alert("New password must be at least 6 characters long.");
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                alert("New passwords do not match!");
+                return;
+            }
+
+            const savePasswordBtn = document.getElementById('savePasswordBtn');
+            savePasswordBtn.innerText = "Updating Password...";
+            savePasswordBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert("Password updated successfully!");
+                    changePasswordForm.reset();
+                } else {
+                    alert(data.error || "Failed to update password.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection error updating password.");
+            } finally {
+                savePasswordBtn.innerText = "Update Password";
+                savePasswordBtn.disabled = false;
             }
         });
 

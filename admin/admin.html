@@ -626,6 +626,165 @@
             from { transform: scale(0.9); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
+
+        /* Dashboard statistics layout */
+        .dashboard-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.2rem;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid rgba(197, 168, 128, 0.18);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.015);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(197, 168, 128, 0.08);
+            border-color: rgba(197, 168, 128, 0.35);
+        }
+
+        .stat-card-icon-wrapper {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+
+        .sales-icon { background: rgba(197, 168, 128, 0.12); color: #c5a880; }
+        .users-icon { background: rgba(54, 162, 235, 0.1); color: #36a2eb; }
+        .toys-icon { background: rgba(75, 192, 192, 0.1); color: #4bc0c0; }
+        .stock-icon { background: rgba(255, 159, 64, 0.1); color: #ff9f40; }
+        .stock-icon.danger { background: rgba(201, 74, 74, 0.12); color: #c94a4a; }
+
+        .stat-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .stat-card-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-heading);
+        }
+
+        /* Two column layout for recent data */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-col-card {
+            background: #ffffff;
+            border: 1px solid rgba(197, 168, 128, 0.18);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.015);
+        }
+
+        .dashboard-col-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Recent Activity Table/List */
+        .activity-table, .low-stock-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .activity-table th, .low-stock-summary-table th {
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            padding: 8px 10px;
+            border-bottom: 1px solid #eef0f3;
+        }
+
+        .activity-table td, .low-stock-summary-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f7f6f2;
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        .activity-table tr:last-child td, .low-stock-summary-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-pill.paid, .status-pill.completed { background: rgba(46, 125, 50, 0.1); color: #2e7d32; }
+        .status-pill.pending { background: rgba(255, 159, 64, 0.1); color: #ff9f40; }
+        .status-pill.cancelled { background: rgba(201, 74, 74, 0.1); color: #c94a4a; }
+
+        .restock-badge {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(201, 74, 74, 0.1);
+            color: #c94a4a;
+        }
+
+        .quick-action-link {
+            color: var(--accent-gold-dark);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .quick-action-link:hover {
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -650,7 +809,15 @@
             <nav class="sidebar-menu">
                 <div class="menu-section-title">Main Menu</div>
                 
-                <a class="menu-item active" id="menu-figurines" onclick="switchTab('figurines-tab')">
+                <a class="menu-item active" id="menu-dashboard" onclick="switchTab('dashboard-tab')">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🏠</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-figurines" onclick="switchTab('figurines-tab')">
                     <div class="menu-item-left">
                         <span class="menu-item-icon">🧸</span>
                         <span>Figurines</span>
@@ -701,7 +868,7 @@
             <!-- Topbar header -->
             <header class="admin-topbar">
                 <div class="topbar-left">
-                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Figurines Catalog</span>
+                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Dashboard Overview</span>
                 </div>
             </header>
 
@@ -713,8 +880,102 @@
                 </div>
 
                 <div class="admin-card">
+                    <!-- Tab 0: Dashboard Overview -->
+                    <div id="dashboard-tab" class="tab-content active">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700;">Dashboard Summary</h3>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;" id="dashLastUpdated">Last updated: Just now</span>
+                        </div>
+
+                        <!-- Statistics Grid -->
+                        <div class="dashboard-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-card-icon-wrapper sales-icon">💰</div>
+                                <div class="stat-card-info">
+                                    <span class="stat-card-label">Total Revenue</span>
+                                    <span class="stat-card-value" id="dashTotalSales">$0.00</span>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="cursor: pointer;" onclick="switchTab('users-tab')">
+                                <div class="stat-card-icon-wrapper users-icon">👥</div>
+                                <div class="stat-card-info">
+                                    <span class="stat-card-label">Active Collectors</span>
+                                    <span class="stat-card-value" id="dashTotalUsers">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="cursor: pointer;" onclick="switchTab('figurines-tab')">
+                                <div class="stat-card-icon-wrapper toys-icon">🧸</div>
+                                <div class="stat-card-info">
+                                    <span class="stat-card-label">Toy Figurines</span>
+                                    <span class="stat-card-value" id="dashTotalFigurines">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card" id="dashLowStockCard" style="cursor: pointer;">
+                                <div class="stat-card-icon-wrapper stock-icon" id="dashLowStockIcon">⚠️</div>
+                                <div class="stat-card-info">
+                                    <span class="stat-card-label">Low Stock Warnings</span>
+                                    <span class="stat-card-value" id="dashLowStockCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dashboard Split Columns -->
+                        <div class="dashboard-row">
+                            <!-- Left: Recent Activity -->
+                            <div class="dashboard-col-card">
+                                <div class="dashboard-col-title">
+                                    <span>Recent Order Payments</span>
+                                    <button class="admin-action-btn" onclick="switchTab('transactions-tab')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">View All</button>
+                                </div>
+                                <div style="overflow-x: auto;">
+                                    <table class="activity-table" id="dashActivityTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Tx ID</th>
+                                                <th>Collector</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">Loading orders...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Right: Low Stock Warnings -->
+                            <div class="dashboard-col-card">
+                                <div class="dashboard-col-title">
+                                    <span>Low Stock Figurines (Qty &le; 5)</span>
+                                    <button class="admin-action-btn" onclick="switchTab('figurines-tab')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">Restock</button>
+                                </div>
+                                <div style="overflow-x: auto;">
+                                    <table class="low-stock-summary-table" id="dashLowStockTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Figurine</th>
+                                                <th>Stock</th>
+                                                <th>Price</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">All items fully stocked!</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tab 1: Figurines CRUD -->
-                    <div id="figurines-tab" class="tab-content active">
+                    <div id="figurines-tab" class="tab-content">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                             <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700;">Toy Figurine Catalog</h3>
                             <button class="admin-action-btn btn-primary" onclick="openAddModal()">+ Add Figurine</button>
@@ -757,7 +1018,10 @@
 
                     <!-- Tab 3: Transactions CRUD -->
                     <div id="transactions-tab" class="tab-content">
-                        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem;">Order Payments & Invoicing</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin: 0;">Order Payments & Invoicing</h3>
+                            <button class="admin-action-btn btn-primary" onclick="exportTransactionsCSV()">Export CSV</button>
+                        </div>
                         <table id="transactionsTable" class="dataTable display">
                             <thead>
                                 <tr>
@@ -794,6 +1058,11 @@
                             <div class="chart-box">
                                 <span class="chart-title">Sales Share by Figurine (Distribution %)</span>
                                 <canvas id="seriesPieChart" style="width: 100%; height: 220px;"></canvas>
+                            </div>
+                            <!-- Chart 4: Collector Demographics Doughnut -->
+                            <div class="chart-box">
+                                <span class="chart-title">Customer Distribution by Area</span>
+                                <canvas id="addressDemographicsChart" style="width: 100%; height: 220px;"></canvas>
                             </div>
                         </div>
                     </div>
@@ -963,7 +1232,8 @@
             $('.tab-content').removeClass('active');
             
             // Highlight active menu item
-            if (tabId === 'figurines-tab') $('#menu-figurines').addClass('active');
+            if (tabId === 'dashboard-tab') $('#menu-dashboard').addClass('active');
+            else if (tabId === 'figurines-tab') $('#menu-figurines').addClass('active');
             else if (tabId === 'users-tab') $('#menu-users').addClass('active');
             else if (tabId === 'transactions-tab') $('#menu-transactions').addClass('active');
             else if (tabId === 'analytics-tab') $('#menu-analytics').addClass('active');
@@ -972,8 +1242,10 @@
             $('#' + tabId).addClass('active');
             
             // Update topbar header dynamic breadcrumb
-            let title = 'Figurines Catalog';
-            if (tabId === 'users-tab') title = 'User Collector Accounts';
+            let title = 'Dashboard Overview';
+            if (tabId === 'dashboard-tab') title = 'Dashboard Overview';
+            else if (tabId === 'figurines-tab') title = 'Figurines Catalog';
+            else if (tabId === 'users-tab') title = 'User Collector Accounts';
             else if (tabId === 'transactions-tab') title = 'Payments & Invoicing';
             else if (tabId === 'analytics-tab') title = 'Analytics Charts';
             else if (tabId === 'trash-tab') title = 'Trash Bin (Soft-Deleted Data)';
@@ -989,6 +1261,10 @@
             } else if (tabId === 'trash-tab') {
                 $('#deletedFigurinesTable').DataTable().columns.adjust().draw();
                 $('#deletedUsersTable').DataTable().columns.adjust().draw();
+            } else if (tabId === 'dashboard-tab') {
+                if (typeof window.loadAdminDashboard === 'function') {
+                    window.loadAdminDashboard();
+                }
             }
         }
 

@@ -512,6 +512,23 @@
                     currentItem = res.result[0];
                     const item = currentItem;
 
+                    // Track recently viewed item (up to 4 items in localStorage LRU)
+                    try {
+                        let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+                        recentlyViewed = recentlyViewed.filter(rv => rv.item_id !== item.item_id);
+                        recentlyViewed.unshift({
+                            item_id: item.item_id,
+                            description: item.description,
+                            sell_price: item.sell_price,
+                            img_path: item.img_path,
+                            quantity: item.quantity
+                        });
+                        recentlyViewed = recentlyViewed.slice(0, 4);
+                        localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
+                    } catch (e) {
+                        console.error("Error updating recently viewed items:", e);
+                    }
+
                     document.title = `${item.description} — Little Mono`;
                     $('#productName').text(item.description);
                     $('#productPrice').text('$' + parseFloat(item.sell_price).toFixed(2));

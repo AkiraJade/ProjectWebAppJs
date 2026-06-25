@@ -415,12 +415,108 @@ $(document).ready(function () {
         .catch(err => console.error(err));
     }
 
+    function loadAdminDashboard() {
+        fetch(`${API_URL}/dashboard/summary`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to load dashboard metrics.');
+            return res.json();
+        })
+        .then(data => {
+            if (data.success && data.summary) {
+                const s = data.summary;
+                
+                // Update widgets
+                $('#dashTotalSales').text(`$${parseFloat(s.totalRevenue).toFixed(2)}`);
+                $('#dashTotalUsers').text(s.totalUsers);
+                $('#dashTotalFigurines').text(s.totalFigurines);
+                $('#dashLowStockCount').text(s.lowStockCount);
+
+                // Style low stock card based on count
+                if (s.lowStockCount > 0) {
+                    $('#dashLowStockCard').css('border-color', 'rgba(201, 74, 74, 0.4)');
+                    $('#dashLowStockIcon').addClass('danger');
+                } else {
+                    $('#dashLowStockCard').css('border-color', 'rgba(197, 168, 128, 0.18)');
+                    $('#dashLowStockIcon').removeClass('danger');
+                }
+
+                // Render Recent Order Payments Table
+                const activityBody = $('#dashActivityTable tbody');
+                activityBody.empty();
+                if (s.recentActivities && s.recentActivities.length > 0) {
+                    s.recentActivities.forEach(act => {
+                        const statusClass = act.status ? act.status.toLowerCase() : 'pending';
+                        const amountFormatted = `$${parseFloat(act.amount).toFixed(2)}`;
+                        const dateFormatted = new Date(act.transaction_date).toLocaleDateString();
+                        activityBody.append(`
+                            <tr>
+                                <td><strong>#TX-${act.transaction_id}</strong></td>
+                                <td>${act.customer_name}</td>
+                                <td>${amountFormatted}</td>
+                                <td><span class="status-pill ${statusClass}">${act.status}</span></td>
+                                <td>${dateFormatted}</td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    activityBody.append(`
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">No order payments recorded.</td>
+                        </tr>
+                    `);
+                }
+
+                // Render Low Stock Table
+                const lowStockBody = $('#dashLowStockTable tbody');
+                lowStockBody.empty();
+                if (s.lowStockItems && s.lowStockItems.length > 0) {
+                    s.lowStockItems.forEach(item => {
+                        const imgUrl = resolveImagePath(item.img_path);
+                        const imgTag = item.img_path ? 
+                            `<img src="${imgUrl}" style="height:35px; border-radius:4px; border:1px solid #c5a880; vertical-align:middle; margin-right:8px;" alt="toy">` : 
+                            `<span style="display:inline-block; width:35px; height:35px; background:#eef0f3; border-radius:4px; vertical-align:middle; margin-right:8px;"></span>`;
+                        
+                        lowStockBody.append(`
+                            <tr>
+                                <td>
+                                    <div style="display:flex; align-items:center;">
+                                        ${imgTag}
+                                        <span style="font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${item.description}</span>
+                                    </div>
+                                </td>
+                                <td><span class="restock-badge">${item.quantity} left</span></td>
+                                <td>$${parseFloat(item.sell_price).toFixed(2)}</td>
+                                <td><a class="quick-action-link" onclick="openEditModal(${item.item_id})">Restock</a></td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    lowStockBody.append(`
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">All items fully stocked!</td>
+                        </tr>
+                    `);
+                }
+
+                // Update last updated timestamp
+                $('#dashLastUpdated').text(`Last updated: ${new Date().toLocaleTimeString()}`);
+            }
+        })
+        .catch(err => console.error(err));
+    }
+
+    // Expose to window scope so switchTab can call it
+    window.loadAdminDashboard = loadAdminDashboard;
+
     // Trigger initial data loads
     fetchFigurines();
     fetchUsers();
     fetchTransactions();
     fetchDeletedFigurines();
     fetchDeletedUsers();
+    loadAdminDashboard();
 
     // --------------------------------------------------------
     // 2. PRODUCT CRUD HANDLERS
@@ -458,6 +554,7 @@ $(document).ready(function () {
             closeAddModal();
             fetchFigurines();
             loadAnalyticsCharts(); // refresh analytics
+            loadAdminDashboard();
         })
         .catch(err => {
             alert('Error creating figurine: ' + err.message);
@@ -498,6 +595,7 @@ $(document).ready(function () {
             closeEditModal();
             fetchFigurines();
             loadAnalyticsCharts(); // refresh analytics
+            loadAdminDashboard();
         })
         .catch(err => {
             alert('Error updating figurine: ' + err.message);
@@ -518,6 +616,7 @@ $(document).ready(function () {
                 fetchFigurines();
                 fetchDeletedFigurines();
                 loadAnalyticsCharts();
+                loadAdminDashboard();
             })
             .catch(err => {
                 alert('Deletion failed: ' + err.message);
@@ -537,6 +636,7 @@ $(document).ready(function () {
             fetchFigurines();
             fetchDeletedFigurines();
             loadAnalyticsCharts();
+            loadAdminDashboard();
         })
         .catch(err => {
             alert('Failed to restore figurine: ' + err.message);
@@ -617,6 +717,7 @@ $(document).ready(function () {
             if (!res.ok) throw new Error(data.error || 'Failed to update role');
             alert('User role updated successfully.');
             fetchUsers();
+            loadAdminDashboard();
         })
         .catch(err => {
             alert('Role update failed: ' + err.message);
@@ -635,6 +736,7 @@ $(document).ready(function () {
                 alert(data.message);
                 fetchUsers();
                 fetchDeletedUsers();
+                loadAdminDashboard();
             })
             .catch(err => {
                 alert('Deactivation action failed: ' + err.message);
@@ -653,6 +755,7 @@ $(document).ready(function () {
             alert('Collector account activated successfully.');
             fetchUsers();
             fetchDeletedUsers();
+            loadAdminDashboard();
         })
         .catch(err => {
             alert('Failed to activate collector account: ' + err.message);
@@ -681,6 +784,7 @@ $(document).ready(function () {
             alert(`Status updated! Email containing PDF invoice has been sent to customer.`);
             selectEl.css('opacity', '1').prop('disabled', false);
             fetchTransactions();
+            loadAdminDashboard();
         })
         .catch(err => {
             alert('Failed to update transaction status: ' + err.message);
@@ -699,6 +803,7 @@ $(document).ready(function () {
                 if (!res.ok) throw new Error(data.error || 'Failed to delete transaction');
                 alert('Transaction record deleted.');
                 fetchTransactions();
+                loadAdminDashboard();
             })
             .catch(err => {
                 alert('Failed to delete transaction: ' + err.message);
@@ -712,6 +817,7 @@ $(document).ready(function () {
     let revChartInstance = null;
     let salesChartInstance = null;
     let seriesChartInstance = null;
+    let addressChartInstance = null;
 
     function loadAnalyticsCharts() {
         // A. Sales Volume Bar & Revenue Line Charts
@@ -725,6 +831,7 @@ $(document).ready(function () {
         .then(data => {
             const months = (data.rows || []).map(r => r.month);
             const revenues = (data.rows || []).map(r => parseFloat(r.total || 0));
+            const volumes = (data.rows || []).map(r => parseInt(r.volume || 0));
             
             // Render Revenue Line Chart
             if (revChartInstance) revChartInstance.destroy();
@@ -754,7 +861,7 @@ $(document).ready(function () {
                     labels: months.length > 0 ? months : ['No Data'],
                     datasets: [{
                         label: 'Volume Sold',
-                        data: revenues.map(r => Math.round(r / 500) + 1),
+                        data: volumes.length > 0 ? volumes : [0],
                         backgroundColor: '#1c1c1c'
                     }]
                 },
@@ -793,6 +900,44 @@ $(document).ready(function () {
             });
         })
         .catch(err => console.error(err));
+
+        // C. Customer Demographics Doughnut Chart
+        fetch(`${API_URL}/address-chart`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch address demographics chart data');
+            return res.json();
+        })
+        .then(data => {
+            const locations = (data.rows || []).map(r => r.addressline || 'Not Provided');
+            const counts = (data.rows || []).map(r => parseInt(r.total || 0));
+
+            if (addressChartInstance) addressChartInstance.destroy();
+            const ctxAddress = document.getElementById('addressDemographicsChart').getContext('2d');
+            addressChartInstance = new Chart(ctxAddress, {
+                type: 'doughnut',
+                data: {
+                    labels: locations.length > 0 ? locations : ['No Data'],
+                    datasets: [{
+                        data: counts.length > 0 ? counts : [1],
+                        backgroundColor: [
+                            '#c5a880', '#eddcc6', '#1c1c1c', '#a89475', 
+                            '#e3d8c1', '#8c7d67', '#ebdcb9', '#dbccb1'
+                        ]
+                    }]
+                },
+                options: { 
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => console.error(err));
     }
 
     // Trigger charts load
@@ -827,5 +972,28 @@ $(document).ready(function () {
         $('input[name="editCategories"]').prop('checked', false);
         $('#editTagInputField').val('');
         renderEditCustomTags();
+    };
+
+    window.exportTransactionsCSV = function () {
+        fetch(`${API_URL}/transactions/export`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to export transactions summary.');
+            return res.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transactions_summary.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            alert('Export failed: ' + err.message);
+        });
     };
 });
