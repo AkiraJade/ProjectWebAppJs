@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!placeholder) return;
         
         try {
-            const html = await $.ajax({
+            let html = await $.ajax({
                 url: basePath + 'header.html?v=' + Date.now(),
                 type: 'GET',
                 dataType: 'html',
