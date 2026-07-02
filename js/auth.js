@@ -122,17 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
+                const data = await $.ajax({
+                    url: `${API_BASE_URL}/login`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ email, password }),
+                    dataType: 'json'
                 });
 
-                const data = await response.json();
-
-                if (response.ok && data.token) {
+                if (data.token) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     
@@ -149,9 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const errorMsg = data.message || data.error || "Invalid email or password.";
                     showToast(errorMsg, "error");
                 }
-            } catch (err) {
-                console.error("Login API Error:", err);
-                showToast("Cannot connect to server. Ensure your backend is running.", "error");
+            } catch (xhr) {
+                const errData = xhr.responseJSON || {};
+                const errorMsg = errData.message || errData.error || "Cannot connect to server. Ensure your backend is running.";
+                console.error("Login API Error:", errData);
+                showToast(errorMsg, "error");
             } finally {
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;
@@ -283,17 +283,15 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ fname, lname, email, password, phone, dob, addresses })
+                const data = await $.ajax({
+                    url: `${API_BASE_URL}/register`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ fname, lname, email, password, phone, dob, addresses }),
+                    dataType: 'json'
                 });
 
-                const data = await response.json();
-
-                if (response.ok && data.success) {
+                if (data.success) {
                     showToast("Account created! Redirecting to sign in...", "success");
                     setTimeout(() => {
                         window.location.href = `login.html?registered=true&email=${encodeURIComponent(email)}`;
@@ -302,9 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const errorMsg = data.message || data.error || "Registration failed. Try again.";
                     showToast(errorMsg, "error");
                 }
-            } catch (err) {
-                console.error("Register API Error:", err);
-                showToast("Cannot connect to server. Ensure your backend is running.", "error");
+            } catch (xhr) {
+                const errData = xhr.responseJSON || {};
+                const errorMsg = errData.message || errData.error || "Cannot connect to server. Ensure your backend is running.";
+                console.error("Register API Error:", errData);
+                showToast(errorMsg, "error");
             } finally {
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;

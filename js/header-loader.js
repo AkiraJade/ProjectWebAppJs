@@ -35,9 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!placeholder) return;
         
         try {
-            const response = await fetch(basePath + 'header.html?v=' + Date.now(), { cache: 'no-cache' });
-            if (!response.ok) throw new Error("Header fetch failed");
-            let html = await response.text();
+            const html = await $.ajax({
+                url: basePath + 'header.html?v=' + Date.now(),
+                type: 'GET',
+                dataType: 'html',
+                cache: false
+            });
 
             // Rewrite header links to use correct base path
             html = html.replace(/href="([^"#][^"]*)"/g, (match, href) => {

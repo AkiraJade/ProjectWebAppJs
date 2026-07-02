@@ -106,9 +106,11 @@
     async function fetchSuggestions(query) {
         try {
             renderLoading();
-            const res = await fetch(`${API_BASE}/items/search?q=${encodeURIComponent(query)}`);
-            if (!res.ok) throw new Error('Search failed');
-            const data = await res.json();
+            const data = await $.ajax({
+                url: `${API_BASE}/items/search?q=${encodeURIComponent(query)}`,
+                type: 'GET',
+                dataType: 'json'
+            });
             renderResults(data.items || [], query);
         } catch (err) {
             dropdown.innerHTML = `<div class="home-search-no-results" style="color:#c94a4a;">Could not reach server. Is the backend running?</div>`;

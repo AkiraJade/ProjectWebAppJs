@@ -271,61 +271,29 @@
         let cart = [];
         let userAddresses = [];
 
-        // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
-        const originalFetch = window.fetch;
-        window.fetch = async function (resource, init) {
-            const url = typeof resource === 'string' ? resource : resource.url;
-            const currentToken = localStorage.getItem('token');
-            if (url.includes('/api/v1/') && currentToken) {
-                init = init || {};
-                init.headers = init.headers || {};
-                if (init.headers instanceof Headers) {
-                    init.headers.set('Authorization', `Bearer ${currentToken}`);
-                } else {
-                    init.headers['Authorization'] = `Bearer ${currentToken}`;
+        // Global AJAX setup for automatic auth headers and session expiration handling
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                const currentToken = localStorage.getItem('token');
+                if (settings.url && settings.url.includes('/api/v1/') && currentToken) {
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + currentToken);
                 }
             }
+        });
 
-            try {
-                const res = await originalFetch(resource, init);
-                if (res.status === 401) {
-                    let message = 'Session expired. Please log in again.';
-                    try {
-                        const clone = res.clone();
-                        const data = await clone.json();
-                        message = data.message || data.error || message;
-                    } catch (e) {}
-                    
-                    alert(message);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '../login.html';
-                    return new Promise(() => {}); // abort
-                }
-                
-                // Intercept json() to map message -> error
-                const originalJson = res.json;
-                res.json = async function () {
-                    try {
-                        const data = await originalJson.call(res);
-                        if (data && typeof data === 'object') {
-                            if (data.message && !data.error) {
-                                data.error = data.message;
-                            }
-                        }
-                        return data;
-                    } catch (jsonErr) {
-                        if (!res.ok) {
-                            return { error: `Server error (${res.status}).` };
-                        }
-                        throw jsonErr;
-                    }
-                };
-                return res;
-            } catch (err) {
-                throw err;
+        $(document).ajaxError(function(event, xhr, settings) {
+            if (xhr.status === 401) {
+                let message = 'Session expired. Please log in again.';
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    message = data.message || data.error || message;
+                } catch(e) {}
+                alert(message);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '../login.html';
             }
-        };
+        });
 
         // Helper to resolve image paths
         function resolveImagePath(path) {
@@ -359,16 +327,18 @@
         function loadAddresses() {
             if (!token) return;
 
-            fetch(`${API_URL}/addresses`)
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load addresses');
-                return res.json();
-            })
-            .then(data => {
-                userAddresses = data.addresses || [];
-                updateAddressDropdown();
-            })
-            .catch(err => console.error("Addresses load error:", err));
+            $.ajax({
+                url: `${API_URL}/addresses`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    userAddresses = data.addresses || [];
+                    updateAddressDropdown();
+                },
+                error: function(err) {
+                    console.error("Addresses load error:", err);
+                }
+            });
         }
 
         function updateAddressDropdown() {
@@ -434,52 +404,48 @@
             const saveBtn = $('#saveAddressBtn');
             saveBtn.prop('disabled', true).text('Saving...');
 
-            fetch(`${API_URL}/addresses`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
+            $.ajax({
+                url: `${API_URL}/addresses`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
                     street_address: street,
                     city: city,
                     province: province,
                     zip_code: zip,
                     country: country
-                })
-            })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(data => {
-                        throw new Error(data.error || 'Failed to add address');
-                    });
+                }),
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        alert('✓ Address saved successfully!');
+                        closeAddressModal();
+                        
+                        // Reload addresses list and select the new one
+                        $.ajax({
+                            url: `${API_URL}/addresses`,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(resData) {
+                                userAddresses = resData.addresses || [];
+                                updateAddressDropdown();
+                                if (data.address && data.address.address_id) {
+                                    $('#shippingAddressSelect').val(data.address.address_id);
+                                    onAddressSelectChange();
+                                }
+                            }
+                        });
+                    } else {
+                        alert('Error adding address: ' + (data.error || 'Failed to add address'));
+                    }
+                },
+                error: function(xhr) {
+                    const errData = xhr.responseJSON || {};
+                    alert('Error adding address: ' + (errData.error || 'Failed to add address'));
+                },
+                complete: function() {
+                    saveBtn.prop('disabled', false).text('Save Address');
                 }
-                return res.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('✓ Address saved successfully!');
-                    closeAddressModal();
-                    
-                    // Reload addresses list and select the new one
-                    fetch(`${API_URL}/addresses`)
-                    .then(res => res.json())
-                    .then(resData => {
-                        userAddresses = resData.addresses || [];
-                        updateAddressDropdown();
-                        if (data.address && data.address.address_id) {
-                            $('#shippingAddressSelect').val(data.address.address_id);
-                            onAddressSelectChange();
-                        }
-                    });
-                } else {
-                    throw new Error(data.error || 'Failed to add address');
-                }
-            })
-            .catch(err => {
-                alert('Error adding address: ' + err.message);
-            })
-            .finally(() => {
-                saveBtn.prop('disabled', false).text('Save Address');
             });
         };
 
@@ -496,32 +462,32 @@
             $('#cartEmptyState').hide();
             $('#cartSummarySection').show();
 
-            fetch(`${API_URL}/items`)
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to fetch product catalog');
-                return res.json();
-            })
-            .then(data => {
-                const dbItems = data.rows || [];
-                renderCartItems(dbItems);
-                
-                // Pre-fill recipient name if available in session
-                if (userJson) {
-                    try {
-                        const user = JSON.parse(userJson);
-                        if (user && user.name) {
-                            const nameParts = user.name.trim().split(/\s+/);
-                            const fname = nameParts[0] || '';
-                            const lname = nameParts.slice(1).join(' ') || '';
-                            if (!$('#shippingFname').val()) $('#shippingFname').val(fname);
-                            if (!$('#shippingLname').val()) $('#shippingLname').val(lname);
-                        }
-                    } catch (e) {}
+            $.ajax({
+                url: `${API_URL}/items`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const dbItems = data.rows || [];
+                    renderCartItems(dbItems);
+                    
+                    // Pre-fill recipient name if available in session
+                    if (userJson) {
+                        try {
+                            const user = JSON.parse(userJson);
+                            if (user && user.name) {
+                                const nameParts = user.name.trim().split(/\s+/);
+                                const fname = nameParts[0] || '';
+                                const lname = nameParts.slice(1).join(' ') || '';
+                                if (!$('#shippingFname').val()) $('#shippingFname').val(fname);
+                                if (!$('#shippingLname').val()) $('#shippingLname').val(lname);
+                            }
+                        } catch (e) {}
+                    }
+                },
+                error: function(xhr, status, err) {
+                    console.error("Cart load error:", err);
+                    $('#cartItemsList').html('<div style="text-align: center; color: #c94a4a; font-size: 0.92rem; padding: 1.5rem 0;">Failed to load cart items. Please ensure backend server is running.</div>');
                 }
-            })
-            .catch(err => {
-                console.error("Cart load error:", err);
-                $('#cartItemsList').html('<div style="text-align: center; color: #c94a4a; font-size: 0.92rem; padding: 1.5rem 0;">Failed to load cart items. Please ensure backend server is running.</div>');
             });
         }
 
@@ -664,12 +630,11 @@
             const checkoutBtn = $('#checkoutBtn');
             checkoutBtn.prop('disabled', true).text('Processing Order...');
 
-            fetch(`${API_URL}/create-order`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
+            $.ajax({
+                url: `${API_URL}/create-order`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
                     cart: cart,
                     user: { id: user.id },
                     fname: fname,
@@ -677,28 +642,23 @@
                     phone: phone,
                     shipping_address: address,
                     payment_method: paymentMethod
-                })
-            })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(data => {
-                        throw new Error(data.error || 'Failed to place order');
-                    });
+                }),
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        alert('✓ Order placed successfully! Thank you for your purchase.');
+                        localStorage.removeItem('cart'); // Clear local cart
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        alert('Error placing order: ' + (data.error || 'Failed to place order'));
+                        checkoutBtn.prop('disabled', false).text('Confirm and Place Order');
+                    }
+                },
+                error: function(xhr) {
+                    const errData = xhr.responseJSON || {};
+                    alert('Error placing order: ' + (errData.error || 'Failed to place order'));
+                    checkoutBtn.prop('disabled', false).text('Confirm and Place Order');
                 }
-                return res.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('✓ Order placed successfully! Thank you for your purchase.');
-                    localStorage.removeItem('cart'); // Clear local cart
-                    window.location.href = 'dashboard.html';
-                } else {
-                    throw new Error(data.error || 'Failed to place order');
-                }
-            })
-            .catch(err => {
-                alert('Error placing order: ' + err.message);
-                checkoutBtn.prop('disabled', false).text('Confirm and Place Order');
             });
         };
 

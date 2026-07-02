@@ -30,17 +30,17 @@ $(document).ready(function () {
 
     // 1. Initial Load
     function loadFigurines() {
-        fetch(`${API_URL}/items`)
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to load figurines');
-            return res.json();
-        })
-        .then(data => {
-            allItems = data.rows || [];
-            applyFilters();
-        })
-        .catch(err => {
-            console.error("Failed to load catalog figurines:", err);
+        $.ajax({
+            url: `${API_URL}/items`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                allItems = data.rows || [];
+                applyFilters();
+            },
+            error: function(xhr, status, err) {
+                console.error("Failed to load catalog figurines:", err);
+            }
         });
     }
 
@@ -209,32 +209,34 @@ $(document).ready(function () {
         }
 
         searchTimeout = setTimeout(() => {
-            fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Search failed');
-                return res.json();
-            })
-            .then(res => {
-                resultsBox.empty().show();
-                const list = res.items || [];
-                if (list.length === 0) {
-                    resultsBox.append('<div style="padding: 10px 15px; color:#7a7a7a; font-size:0.85rem;">No results found</div>');
-                    return;
-                }
-                list.forEach(item => {
-                    const img = resolveImagePath(item.img_path);
-                    resultsBox.append(`
-                        <div class="autocomplete-item" onclick="selectSearchFigurine(${item.item_id}, '${escapeQuote(item.description)}')" style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s ease; border-bottom: 1px solid #f4eedc;">
-                            <img src="${img}" style="width: 30px; height: 30px; border-radius: 4px; border: 1px solid #c5a880;" alt="thumb">
-                            <div>
-                                <div style="font-size: 0.9rem; font-weight:600; color:#1c1c1c;">${item.description}</div>
-                                <div style="font-size: 0.75rem; color: #c5a880; font-weight:500;">$${parseFloat(item.sell_price).toFixed(2)}</div>
+            $.ajax({
+                url: `${API_URL}/search?q=${encodeURIComponent(query)}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    resultsBox.empty().show();
+                    const list = res.items || [];
+                    if (list.length === 0) {
+                        resultsBox.append('<div style="padding: 10px 15px; color:#7a7a7a; font-size:0.85rem;">No results found</div>');
+                        return;
+                    }
+                    list.forEach(item => {
+                        const img = resolveImagePath(item.img_path);
+                        resultsBox.append(`
+                            <div class="autocomplete-item" onclick="selectSearchFigurine(${item.item_id}, '${escapeQuote(item.description)}')" style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s ease; border-bottom: 1px solid #f4eedc;">
+                                <img src="${img}" style="width: 30px; height: 30px; border-radius: 4px; border: 1px solid #c5a880;" alt="thumb">
+                                <div>
+                                    <div style="font-size: 0.9rem; font-weight:600; color:#1c1c1c;">${item.description}</div>
+                                    <div style="font-size: 0.75rem; color: #c5a880; font-weight:500;">$${parseFloat(item.sell_price).toFixed(2)}</div>
+                                </div>
                             </div>
-                        </div>
-                    `);
-                });
-            })
-            .catch(err => console.error(err));
+                        `);
+                    });
+                },
+                error: function(err) {
+                    console.error(err);
+                }
+            });
         }, 300);
     });
 
@@ -242,18 +244,20 @@ $(document).ready(function () {
         $('#shopSearchInput').val(name);
         $('#shopAutocompleteResults').hide().empty();
         
-        fetch(`${API_URL}/items/${id}`)
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to load item');
-            return res.json();
-        })
-        .then(res => {
-            if (res.success && res.result.length > 0) {
-                allItems = res.result;
-                applyFilters();
+        $.ajax({
+            url: `${API_URL}/items/${id}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success && res.result.length > 0) {
+                    allItems = res.result;
+                    applyFilters();
+                }
+            },
+            error: function(err) {
+                console.error(err);
             }
-        })
-        .catch(err => console.error(err));
+        });
     };
 
     $(document).on('click', function (e) {

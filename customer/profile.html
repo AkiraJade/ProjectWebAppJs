@@ -371,62 +371,29 @@
         const token = localStorage.getItem('token');
         const API_URL = 'http://localhost:3000/api/v1';
 
-        // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
-        const originalFetch = window.fetch;
-        window.fetch = async function (resource, init) {
-            const url = typeof resource === 'string' ? resource : resource.url;
-            const currentToken = localStorage.getItem('token');
-            if (url.includes('/api/v1/') && currentToken) {
-                init = init || {};
-                init.headers = init.headers || {};
-                if (init.headers instanceof Headers) {
-                    init.headers.set('Authorization', `Bearer ${currentToken}`);
-                } else {
-                    init.headers['Authorization'] = `Bearer ${currentToken}`;
+        // Global AJAX setup for automatic auth headers and session expiration handling
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                const currentToken = localStorage.getItem('token');
+                if (settings.url && settings.url.includes('/api/v1/') && currentToken) {
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + currentToken);
                 }
             }
+        });
 
-            try {
-                const res = await originalFetch(resource, init);
-                
-                if (res.status === 401) {
-                    let message = 'Session expired. Please log in again.';
-                    try {
-                        const clone = res.clone();
-                        const data = await clone.json();
-                        message = data.message || data.error || message;
-                    } catch (e) {}
-                    
-                    alert(message);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '../login.html';
-                    return new Promise(() => {}); // abort subsequent .then() chains
-                }
-                
-                const originalJson = res.json;
-                res.json = async function () {
-                    try {
-                        const data = await originalJson.call(res);
-                        if (data && typeof data === 'object') {
-                            if (data.message && !data.error) {
-                                data.error = data.message;
-                            }
-                        }
-                        return data;
-                    } catch (jsonErr) {
-                        if (!res.ok) {
-                            return { error: `Server error (${res.status}). Please check your backend logs.` };
-                        }
-                        throw jsonErr;
-                    }
-                };
-                
-                return res;
-            } catch (err) {
-                throw err;
+        $(document).ajaxError(function(event, xhr, settings) {
+            if (xhr.status === 401) {
+                let message = 'Session expired. Please log in again.';
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    message = data.message || data.error || message;
+                } catch(e) {}
+                alert(message);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '../login.html';
             }
-        };
+        });
 
         // Helper to resolve image paths (local assets vs backend uploads)
         function resolveImagePath(path) {
@@ -509,10 +476,13 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/me`);
-                const data = await response.json();
+                const data = await $.ajax({
+                    url: `${API_URL}/me`,
+                    type: 'GET',
+                    dataType: 'json'
+                });
 
-                if (response.ok && data.success) {
+                if (data.success) {
                     const u = data.user;
                     const cust = u.customer || {};
 
@@ -575,14 +545,16 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/update-profile`, {
-                    method: 'POST',
-                    body: formData
+                const data = await $.ajax({
+                    url: `${API_URL}/update-profile`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json'
                 });
 
-                const data = await response.json();
-
-                if (response.ok && data.success) {
+                if (data.success) {
                     alert("Profile details updated successfully!");
                     
                     // Exit edit mode
@@ -612,9 +584,11 @@
                 } else {
                     alert(data.error || "Failed to update profile details.");
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Connection error saving profile details.");
+            } catch (xhr) {
+                if (xhr.status !== 401) {
+                    const errData = xhr.responseJSON || {};
+                    alert(errData.error || "Failed to update profile details.");
+                }
             } finally {
                 submitBtn.innerText = isEditMode ? "Save Profile Details" : "Edit Profile";
                 submitBtn.disabled = false;
@@ -646,25 +620,25 @@
             savePasswordBtn.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/change-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ currentPassword, newPassword })
+                const data = await $.ajax({
+                    url: `${API_URL}/change-password`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ currentPassword, newPassword }),
+                    dataType: 'json'
                 });
 
-                const data = await response.json();
-
-                if (response.ok && data.success) {
+                if (data.success) {
                     alert("Password updated successfully!");
                     changePasswordForm.reset();
                 } else {
                     alert(data.error || "Failed to update password.");
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Connection error updating password.");
+            } catch (xhr) {
+                if (xhr.status !== 401) {
+                    const errData = xhr.responseJSON || {};
+                    alert(errData.error || "Failed to update password.");
+                }
             } finally {
                 savePasswordBtn.innerText = "Update Password";
                 savePasswordBtn.disabled = false;

@@ -518,79 +518,35 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="../js/header-loader.js"></script>
-
     <script>
         $(document).ready(function() {
             const token = localStorage.getItem('token');
             const userJson = localStorage.getItem('user');
 
-            // Global fetch interceptor for automatic authorization headers and 401 session expiration handling
-            const originalFetch = window.fetch;
-            window.fetch = async function (resource, init) {
-                const url = typeof resource === 'string' ? resource : resource.url;
-                const currentToken = localStorage.getItem('token');
-                if (url.includes('/api/v1/') && currentToken) {
-                    init = init || {};
-                    init.headers = init.headers || {};
-                    if (init.headers instanceof Headers) {
-                        init.headers.set('Authorization', `Bearer ${currentToken}`);
-                    } else {
-                        init.headers['Authorization'] = `Bearer ${currentToken}`;
+            // Global AJAX setup for automatic auth headers and session expiration handling
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    const currentToken = localStorage.getItem('token');
+                    if (settings.url && settings.url.includes('/api/v1/') && currentToken) {
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + currentToken);
                     }
                 }
+            });
 
-                try {
-                    const res = await originalFetch(resource, init);
-                    
-                    if (res.status === 401) {
-                        let message = 'Session expired. Please log in again.';
-                        try {
-                            const clone = res.clone();
-                            const data = await clone.json();
-                            message = data.message || data.error || message;
-                        } catch (e) {}
-                        
-                        alert(message);
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        
-                        let loginUrl = 'login.html';
-                        const path = window.location.pathname;
-                        if (path.match(/\/(admin|customer)\//i)) {
-                            loginUrl = '../login.html';
-                        }
-                        window.location.href = loginUrl;
-                        
-                        return new Promise(() => {}); // abort subsequent .then() chains
-                    }
-                    
-                    // Intercept json() to map message -> error for legacy compatibility and handle non-JSON error pages
-                    const originalJson = res.json;
-                    res.json = async function () {
-                        try {
-                            const data = await originalJson.call(res);
-                            if (data && typeof data === 'object') {
-                                if (data.message && !data.error) {
-                                    data.error = data.message;
-                                }
-                            }
-                            return data;
-                        } catch (jsonErr) {
-                            if (!res.ok) {
-                                return { error: `Server error (${res.status}). Please check your backend logs.` };
-                            }
-                            throw jsonErr;
-                        }
-                    };
-                    
-                    return res;
-                } catch (err) {
-                    throw err;
+            $(document).ajaxError(function(event, xhr, settings) {
+                if (xhr.status === 401) {
+                    let message = 'Session expired. Please log in again.';
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        message = data.message || data.error || message;
+                    } catch(e) {}
+                    alert(message);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '../login.html';
                 }
-            };
+            });
 
             if (!token) return;
 
@@ -611,118 +567,115 @@
                 } catch(e) {}
             }
 
-            fetch('http://localhost:3000/api/v1/my-orders', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load orders');
-                return res.json();
-            })
-            .then(response => {
-                if (!response.success) return;
+            // ===== Load Orders =====
+            $.ajax({
+                url: 'http://localhost:3000/api/v1/my-orders',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (!response.success) return;
 
-                const stats = response.stats;
-                $('#statTotalOrders').text(stats.totalOrders);
-                $('#statLoyaltyPoints').text(stats.loyaltyPoints);
-                $('#loyaltyPointsDisplay').text(stats.loyaltyPoints);
-                $('#statCollectionRank').text(stats.collectionRank);
-                $('#statAmountSpent').text('$' + parseFloat(stats.totalSpent || 0).toFixed(0));
+                    const stats = response.stats;
+                    $('#statTotalOrders').text(stats.totalOrders);
+                    $('#statLoyaltyPoints').text(stats.loyaltyPoints);
+                    $('#loyaltyPointsDisplay').text(stats.loyaltyPoints);
+                    $('#statCollectionRank').text(stats.collectionRank);
+                    $('#statAmountSpent').text('$' + parseFloat(stats.totalSpent || 0).toFixed(0));
 
-                // Render orders
-                const container = $('#ordersContainer');
-                container.empty();
-                const orders = response.orders || [];
+                    // Render orders
+                    const container = $('#ordersContainer');
+                    container.empty();
+                    const orders = response.orders || [];
 
-                if (orders.length === 0) {
-                    container.html(`
-                        <div class="empty-state">
-                            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
-                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                            </svg>
-                            <div class="empty-title">No orders yet</div>
-                            <p>Start your collector journey today!</p>
-                            <button class="dash-btn primary" onclick="window.location.href='shop.html'">Shop Now</button>
-                        </div>
-                    `);
-                    return;
-                }
+                    if (orders.length === 0) {
+                        container.html(`
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <div class="empty-title">No orders yet</div>
+                                <p>Start your collector journey today!</p>
+                                <button class="dash-btn primary" onclick="window.location.href='shop.html'">Shop Now</button>
+                            </div>
+                        `);
+                        return;
+                    }
 
-                orders.forEach(order => {
-                    const dateFormatted = new Date(order.date_placed).toLocaleDateString(undefined, {
-                        year: 'numeric', month: 'short', day: 'numeric'
-                    });
-                    const firstItem = order.items[0] || {};
-                    const img = resolveImagePath(firstItem.img_path);
-                    const extraCount = order.items.length > 1 ? ` +${order.items.length - 1} more` : '';
+                    orders.forEach(order => {
+                        const dateFormatted = new Date(order.date_placed).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                        });
+                        const firstItem = order.items[0] || {};
+                        const img = resolveImagePath(firstItem.img_path);
+                        const extraCount = order.items.length > 1 ? ` +${order.items.length - 1} more` : '';
 
-                    container.append(`
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.8rem; background: rgba(245,239,230,0.2); border: 1px solid rgba(197,168,128,0.08); border-radius: 10px; gap: 0.8rem;">
-                            <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-                                <img src="${img}" style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.12); object-fit: contain; background: #fff; flex-shrink: 0;" alt="item">
-                                <div style="min-width: 0;">
-                                    <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Order #${order.order_id}${extraCount}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">${dateFormatted}</div>
+                        container.append(`
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.8rem; background: rgba(245,239,230,0.2); border: 1px solid rgba(197,168,128,0.08); border-radius: 10px; gap: 0.8rem;">
+                                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                                    <img src="${img}" style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.12); object-fit: contain; background: #fff; flex-shrink: 0;" alt="item">
+                                    <div style="min-width: 0;">
+                                        <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Order #${order.order_id}${extraCount}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${dateFormatted}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary);">$${parseFloat(order.amount).toFixed(2)}</span>
+                                    <span class="status-badge ${order.status.toLowerCase()}">${order.status}</span>
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
-                                <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary);">$${parseFloat(order.amount).toFixed(2)}</span>
-                                <span class="status-badge ${order.status.toLowerCase()}">${order.status}</span>
-                            </div>
-                        </div>
-                    `);
-                });
-            })
-            .catch(err => {
-                console.error("Dashboard load error:", err);
-                $('#ordersContainer').html('<div class="empty-state"><p style="color:#c94a4a;">Error loading data. Ensure server is running.</p></div>');
+                        `);
+                    });
+                },
+                error: function(xhr, status, err) {
+                    console.error("Dashboard load error:", err);
+                    $('#ordersContainer').html('<div class="empty-state"><p style="color:#c94a4a;">Error loading data. Ensure server is running.</p></div>');
+                }
             });
 
             // ===== Load Wishlist =====
-            fetch('http://localhost:3000/api/v1/wishlist', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load wishlist');
-                return res.json();
-            })
-            .then(res => {
-                const wc = $('#wishlistContainer');
-                wc.empty();
-                const items = res.items || [];
-                if (items.length === 0) {
-                    wc.html(`
-                        <div class="empty-state">
-                            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                            <div class="empty-title">No items in wishlist</div>
-                            <p>Save your favorite products for later</p>
-                            <button class="dash-btn primary" onclick="window.location.href='shop.html'">Explore Products</button>
-                        </div>
-                    `);
-                    return;
+            $.ajax({
+                url: 'http://localhost:3000/api/v1/wishlist',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    const wc = $('#wishlistContainer');
+                    wc.empty();
+                    const items = res.items || [];
+                    if (items.length === 0) {
+                        wc.html(`
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent-gold);">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                                <div class="empty-title">No items in wishlist</div>
+                                <p>Save your favorite products for later</p>
+                                <button class="dash-btn primary" onclick="window.location.href='shop.html'">Explore Products</button>
+                            </div>
+                        `);
+                        return;
+                    }
+                    items.forEach(item => {
+                        const img = resolveImagePath(item.img_path);
+                        wc.append(`
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.7rem; background: rgba(245,239,230,0.2); border: 1px solid rgba(197,168,128,0.08); border-radius: 10px; gap: 0.8rem;" id="wl-${item.item_id}">
+                                <a href="item.html?id=${item.item_id}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; flex: 1;">
+                                    <img src="${img}" style="width: 38px; height: 38px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.12); object-fit: contain; background: #fff; flex-shrink: 0;" alt="item">
+                                    <div style="min-width: 0;">
+                                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.description}</div>
+                                        <div style="font-size: 0.75rem; color: var(--accent-gold-dark); font-weight: 600;">$${parseFloat(item.sell_price).toFixed(2)}</div>
+                                    </div>
+                                </a>
+                                <button onclick="removeFromWishlist(${item.item_id})" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; transition: color 0.2s;" title="Remove from wishlist">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        `);
+                    });
+                },
+                error: function(err) {
+                    $('#wishlistContainer').html('<div class="empty-state"><p>Could not load wishlist.</p></div>');
                 }
-                items.forEach(item => {
-                    const img = resolveImagePath(item.img_path);
-                    wc.append(`
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.7rem; background: rgba(245,239,230,0.2); border: 1px solid rgba(197,168,128,0.08); border-radius: 10px; gap: 0.8rem;" id="wl-${item.item_id}">
-                            <a href="item.html?id=${item.item_id}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; flex: 1;">
-                                <img src="${img}" style="width: 38px; height: 38px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.12); object-fit: contain; background: #fff; flex-shrink: 0;" alt="item">
-                                <div style="min-width: 0;">
-                                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.description}</div>
-                                    <div style="font-size: 0.75rem; color: var(--accent-gold-dark); font-weight: 600;">$${parseFloat(item.sell_price).toFixed(2)}</div>
-                                </div>
-                            </a>
-                            <button onclick="removeFromWishlist(${item.item_id})" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; transition: color 0.2s;" title="Remove from wishlist">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                            </button>
-                        </div>
-                    `);
-                });
-            })
-            .catch(err => {
-                $('#wishlistContainer').html('<div class="empty-state"><p>Could not load wishlist.</p></div>');
             });
 
             // ===== Load Recently Viewed =====
@@ -765,25 +718,20 @@
             }
         });
 
-        function removeFromWishlist(itemId) {
-            const token = localStorage.getItem('token');
-            fetch('http://localhost:3000/api/v1/wishlist/' + itemId + '/toggle', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
+        window.removeFromWishlist = function(itemId) {
+            $.ajax({
+                url: 'http://localhost:3000/api/v1/wishlist/' + itemId + '/toggle',
+                type: 'POST',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success && !res.wishlisted) {
+                        $('#wl-' + itemId).fadeOut(300, function() { $(this).remove(); });
+                    }
+                },
+                error: function(err) {
+                    console.error(err);
                 }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Toggle failed');
-                return res.json();
-            })
-            .then(res => {
-                if (res.success && !res.wishlisted) {
-                    $('#wl-' + itemId).fadeOut(300, function() { $(this).remove(); });
-                }
-            })
-            .catch(err => console.error(err));
+            });
         }
     </script>
 </body>

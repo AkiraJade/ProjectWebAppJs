@@ -70,26 +70,20 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/v1/deactivate', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email })
+                const data = await $.ajax({
+                    url: 'http://localhost:3000/api/v1/deactivate',
+                    type: 'DELETE',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ email }),
+                    dataType: 'json'
                 });
 
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    alert("Your account has been successfully deactivated.");
-                    localStorage.clear();
-                    window.location.href = "../index.html";
-                } else {
-                    alert(data.error || "Deactivation failed.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Connection error. Ensure the server is online.");
+                alert("Your account has been successfully deactivated.");
+                localStorage.clear();
+                window.location.href = "../index.html";
+            } catch (xhr) {
+                const errData = xhr.responseJSON || {};
+                alert(errData.error || "Deactivation failed.");
             }
         });
     </script>
