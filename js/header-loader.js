@@ -1,3 +1,45 @@
+// Visual error logger for debugging in UI
+(function() {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.position = 'fixed';
+    errorDiv.style.bottom = '10px';
+    errorDiv.style.left = '10px';
+    errorDiv.style.background = 'rgba(255, 0, 0, 0.9)';
+    errorDiv.style.color = 'white';
+    errorDiv.style.padding = '10px';
+    errorDiv.style.zIndex = '99999';
+    errorDiv.style.fontFamily = 'monospace';
+    errorDiv.style.fontSize = '12px';
+    errorDiv.style.borderRadius = '5px';
+    errorDiv.style.display = 'none';
+    errorDiv.id = 'visual-debug-console';
+    
+    function logErrorToScreen(msg) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML += '<div>' + msg + '</div>';
+    }
+    
+    window.addEventListener('error', function(e) {
+        logErrorToScreen('Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+    });
+    
+    window.addEventListener('unhandledrejection', function(e) {
+        logErrorToScreen('Promise Rejection: ' + e.reason);
+    });
+    
+    // Also patch console.error
+    const origConsoleError = console.error;
+    console.error = function() {
+        origConsoleError.apply(console, arguments);
+        const args = Array.prototype.slice.call(arguments);
+        logErrorToScreen('Console Error: ' + args.join(' '));
+    };
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        document.body.appendChild(errorDiv);
+    });
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     // Compute basePath: pages in subfolders (admin/, customer/) need "../" prefix
     function getBasePath() {
@@ -164,7 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g, 
+        if (!str) return '';
+        return String(str).replace(/[&<>'"]/g, 
             tag => ({
                 '&': '&amp;',
                 '<': '&lt;',
