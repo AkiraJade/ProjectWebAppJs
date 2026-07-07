@@ -1002,6 +1002,26 @@ $(document).ready(function () {
         ]
     });
 
+    const expensesTable = $('#expensesTable').DataTable({
+        columns: [
+            { data: 'po_number' },
+            { 
+                data: 'supplier', 
+                render: data => data ? data.name : 'N/A' 
+            },
+            { 
+                data: 'created_at',
+                render: data => new Date(data).toLocaleString()
+            },
+            { 
+                data: 'total_cost',
+                render: data => `$${parseFloat(data).toFixed(2)}`
+            },
+            { data: 'notes', defaultContent: '' }
+        ],
+        order: [[2, 'desc']]
+    });
+
     function fetchSuppliers() {
         $.ajax({
             url: `${API_URL}/suppliers`,
@@ -1044,6 +1064,7 @@ $(document).ready(function () {
 
     // Call fetchSuppliers initially to populate the dropdowns
     fetchSuppliers();
+    fetchExpenses();
 
     // Modal triggers for Supplier
     window.openAddSupplierModal = () => {
@@ -1166,8 +1187,127 @@ $(document).ready(function () {
         }
     };
 
+    // Purchase Order Cart state
+    let poCart = [];
+    let currentSupplierId = null;
+
+    // Add item to Purchase Order Cart
+    window.addToPOCart = (itemId, name, unitCost) => {
+        const qtyInput = $(`#po-qty-${itemId}`);
+        const quantity = parseInt(qtyInput.val()) || 0;
+        
+        if (quantity <= 0) {
+            alert('Please enter a valid quantity of 1 or more.');
+            return;
+        }
+
+        // Check if item already exists in cart
+        const existing = poCart.find(i => i.item_id === itemId);
+        if (existing) {
+            existing.quantity += quantity;
+        } else {
+            poCart.push({
+                item_id: itemId,
+                name: name,
+                unit_cost: parseFloat(unitCost) || 0,
+                quantity: quantity
+            });
+        }
+
+        qtyInput.val(1); // Reset input quantity to 1
+        renderPOCart();
+    };
+
+    // Render current Purchase Order Cart items
+    function renderPOCart() {
+        const cartWrapper = $('#poCartItems');
+        cartWrapper.empty();
+
+        if (poCart.length === 0) {
+            cartWrapper.append('<div style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">Cart is empty</div>');
+            $('#poCartTotal').text('$0.00');
+            $('#checkoutPOBtn').prop('disabled', true);
+            return;
+        }
+
+        let total = 0;
+        poCart.forEach((item, index) => {
+            const cost = item.unit_cost * item.quantity;
+            total += cost;
+            cartWrapper.append(`
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px dashed rgba(197,168,128,0.15);">
+                    <div style="flex: 1; padding-right: 0.5rem; text-align: left;">
+                        <strong>${item.name}</strong><br>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">${item.quantity} x $${item.unit_cost.toFixed(2)}</span>
+                    </div>
+                    <div style="font-weight: 600; font-size: 0.8rem; margin-right: 0.5rem;">$${cost.toFixed(2)}</div>
+                    <button class="admin-action-btn btn-danger" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 4px;" onclick="removeFromPOCart(${index})">&times;</button>
+                </div>
+            `);
+        });
+
+        $('#poCartTotal').text(`$${total.toFixed(2)}`);
+        $('#checkoutPOBtn').prop('disabled', false);
+    }
+
+    // Remove item from Purchase Order Cart
+    window.removeFromPOCart = (index) => {
+        poCart.splice(index, 1);
+        renderPOCart();
+    };
+
+    // Checkout Purchase Order (Procurement)
+    window.checkoutPurchaseOrder = () => {
+        if (poCart.length === 0 || !currentSupplierId) return;
+
+        const notes = $('#poNotes').val().trim();
+        const payload = {
+            supplier_id: currentSupplierId,
+            notes: notes,
+            items: poCart.map(item => ({
+                item_id: item.item_id,
+                quantity: item.quantity,
+                unit_cost: item.unit_cost
+            }))
+        };
+
+        $('#checkoutPOBtn').prop('disabled', true).text('Processing...');
+
+        $.ajax({
+            url: `${API_URL}/purchase-orders`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    alert('Purchase order created successfully and stock updated!');
+                    closeViewSupplierModal();
+                    
+                    // Refresh data across tabs
+                    fetchFigurines();
+                    loadAdminDashboard();
+                    fetchExpenses();
+                } else {
+                    alert('Error creating purchase order: ' + (data.error || 'Unknown error'));
+                    $('#checkoutPOBtn').prop('disabled', false).text('Checkout Procurement Order');
+                }
+            },
+            error: function(xhr) {
+                const errData = xhr.responseJSON || {};
+                alert('Error creating purchase order: ' + (errData.error || 'Failed to place order.'));
+                $('#checkoutPOBtn').prop('disabled', false).text('Checkout Procurement Order');
+            }
+        });
+    };
+
     // View Supplier Details (with Brands and Supplied Products)
     window.viewSupplierDetails = (id) => {
+        currentSupplierId = id;
+        poCart = []; // Clear cart on change
+        $('#poNotes').val('');
+        renderPOCart();
+
         $.ajax({
             url: `${API_URL}/suppliers/${id}`,
             type: 'GET',
@@ -1191,19 +1331,27 @@ $(document).ready(function () {
                             const brandName = item.brand ? item.brand.name : 'Unknown Brand';
                             brands.add(brandName);
 
+                            // Escape single quotes in product name
+                            const escapedName = (item.name || item.description).replace(/'/g, "\\'");
+
                             productsBody.append(`
                                 <tr>
                                     <td><strong>${item.name || item.description}</strong></td>
                                     <td>${brandName}</td>
-                                    <td>$${parseFloat(item.sell_price).toFixed(2)}</td>
-                                    <td><span class="restock-badge" style="background:${item.quantity <= 5 ? 'rgba(201, 74, 74, 0.1)' : 'rgba(46, 125, 50, 0.1)'}; color:${item.quantity <= 5 ? '#c94a4a' : '#2e7d32'};">${item.quantity} left</span></td>
+                                    <td>$${parseFloat(item.cost_price).toFixed(2)}</td>
+                                    <td>
+                                        <input type="number" id="po-qty-${item.item_id}" class="admin-input" style="width: 60px; padding: 0.25rem; text-align: center; margin: 0;" min="1" value="1">
+                                    </td>
+                                    <td>
+                                        <button class="admin-action-btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 4px;" onclick="addToPOCart(${item.item_id}, '${escapedName}', ${item.cost_price})">Add</button>
+                                    </td>
                                 </tr>
                             `);
                         });
                     } else {
                         productsBody.append(`
                             <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 1.5rem 0;">No products currently linked to this supplier.</td>
+                                <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 1.5rem 0;">No products currently linked to this supplier.</td>
                             </tr>
                         `);
                     }
@@ -1230,5 +1378,60 @@ $(document).ready(function () {
 
     window.closeViewSupplierModal = () => {
         $('#viewSupplierModal').removeClass('active');
+    };
+
+    function fetchExpenses() {
+        $.ajax({
+            url: `${API_URL}/purchase-orders`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success && data.orders) {
+                    expensesTable.clear().rows.add(data.orders).draw();
+                    
+                    // Calculate sum of total expenses
+                    let totalExpenses = 0;
+                    data.orders.forEach(order => {
+                        totalExpenses += parseFloat(order.total_cost) || 0;
+                    });
+                    $('#totalExpensesText').text(`$${totalExpenses.toFixed(2)}`);
+                }
+            },
+            error: function(xhr) {
+                console.error('Failed to load purchase orders.');
+            }
+        });
+    }
+    window.fetchExpenses = fetchExpenses;
+
+    window.exportExpensesCSV = () => {
+        $.ajax({
+            url: `${API_URL}/purchase-orders`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success && data.orders) {
+                    let csv = 'PO Number,Supplier Name,Date,Total Cost ($),Notes\n';
+                    data.orders.forEach(order => {
+                        const formattedDate = new Date(order.created_at).toLocaleString();
+                        const notes = order.notes ? order.notes.replace(/"/g, '""') : '';
+                        csv += `"${order.po_number}","${order.supplier ? order.supplier.name : 'N/A'}","${formattedDate}",${parseFloat(order.total_cost).toFixed(2)},"${notes}"\n`;
+                    });
+                    
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `expenses_report_${Date.now()}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            },
+            error: function() {
+                alert('Failed to fetch purchase orders for CSV export.');
+            }
+        });
     };
 });

@@ -1095,6 +1095,32 @@
                                 <canvas id="addressDemographicsChart" style="width: 100%; height: 220px;"></canvas>
                             </div>
                         </div>
+                        
+                        <!-- Procurement Expenses Section -->
+                        <div style="margin-top: 3rem; border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 2rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <div>
+                                    <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--accent-gold-dark);">Supplier Procurement Expenses</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">Total expenses from procurement purchase orders: <strong id="totalExpensesText" style="color: #c94a4a; font-size: 1rem;">$0.00</strong></p>
+                                </div>
+                                <button class="admin-action-btn btn-success" onclick="exportExpensesCSV()" style="padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 50px; font-weight: 600;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    Export Expenses CSV
+                                </button>
+                            </div>
+                            <table id="expensesTable" class="dataTable display" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>PO Number</th>
+                                        <th>Supplier Name</th>
+                                        <th>Date</th>
+                                        <th>Total Cost</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- Tab 5: Trash Bin -->
@@ -1328,7 +1354,7 @@
 
     <!-- VIEW SUPPLIER MODAL -->
     <div class="admin-modal" id="viewSupplierModal">
-        <div class="admin-modal-card" style="max-width: 650px;">
+        <div class="admin-modal-card" style="max-width: 850px;">
             <button class="close-modal-btn" onclick="closeViewSupplierModal()">&times;</button>
             <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Supplier Profile</h3>
             
@@ -1347,20 +1373,49 @@
                 <div id="viewSupplierBrands" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
             </div>
 
-            <div>
-                <h5 style="margin:0 0 0.5rem 0; font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--accent-gold-dark); letter-spacing: 0.05em; font-weight: 700;">Supplied Products</h5>
-                <div style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
-                    <table class="activity-table" id="viewSupplierProductsTable">
-                        <thead>
-                            <tr>
-                                <th>Product Name</th>
-                                <th>Brand</th>
-                                <th>Sell Price</th>
-                                <th>Stock Qty</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+            <div class="supplier-split-container" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; margin-top: 1.5rem; border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 1.5rem;">
+                <!-- Left: Supplied Products -->
+                <div>
+                    <h5 style="margin:0 0 0.8rem 0; font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--accent-gold-dark); letter-spacing: 0.05em; font-weight: 700;">Supplied Products (Cost Price)</h5>
+                    <div style="max-height: 350px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
+                        <table class="activity-table" id="viewSupplierProductsTable">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Brand</th>
+                                    <th>Unit Cost</th>
+                                    <th>Order Qty</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Right: Purchase Order Cart -->
+                <div style="border-left: 1px solid rgba(197, 168, 128, 0.15); padding-left: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h5 style="margin:0 0 0.8rem 0; font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--accent-gold-dark); letter-spacing: 0.05em; font-weight: 700;">Procurement Cart</h5>
+                        <div id="poCartItems" style="max-height: 200px; overflow-y: auto; margin-bottom: 1rem; font-size: 0.85rem; border: 1px solid rgba(197, 168, 128, 0.1); border-radius: 6px; padding: 0.5rem; background-color: rgba(250, 249, 246, 0.5);">
+                            <div style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">Cart is empty</div>
+                        </div>
+                        
+                        <div class="input-group" style="margin-bottom: 1rem;">
+                            <label for="poNotes" style="font-size: 0.8rem; display:block; margin-bottom:4px;">PO Notes / Remarks</label>
+                            <textarea id="poNotes" rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid rgba(197,168,128,0.25); border-radius: 6px; font-family: var(--font-body); font-size: 0.8rem; background-color: rgba(245, 239, 230, 0.15); color: var(--text-primary);" placeholder="Optional notes for the supplier..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 1rem; font-family: var(--font-heading); font-size: 1rem;">
+                            <span>Estimated Total:</span>
+                            <span id="poCartTotal" style="color: var(--accent-gold-dark);">$0.00</span>
+                        </div>
+                        <button class="admin-action-btn btn-success" id="checkoutPOBtn" onclick="checkoutPurchaseOrder()" style="width: 100%; padding: 0.75rem; border-radius: 50px; font-weight: 600;" disabled>
+                            Checkout Procurement Order
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1420,6 +1475,9 @@
             } else if (tabId === 'analytics-tab') {
                 if (typeof window.loadAnalyticsCharts === 'function') {
                     window.loadAnalyticsCharts();
+                }
+                if (typeof window.fetchExpenses === 'function') {
+                    window.fetchExpenses();
                 }
             }
         }
