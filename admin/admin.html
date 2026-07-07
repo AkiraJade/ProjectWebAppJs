@@ -841,6 +841,14 @@
                     <span class="menu-item-arrow">→</span>
                 </a>
                 
+                <a class="menu-item" id="menu-suppliers" onclick="switchTab('suppliers-tab')">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🏢</span>
+                        <span>Suppliers</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
                 <a class="menu-item" id="menu-analytics" onclick="switchTab('analytics-tab')">
                     <div class="menu-item-left">
                         <span class="menu-item-icon">📊</span>
@@ -1040,6 +1048,28 @@
                         </table>
                     </div>
 
+                    <!-- Tab 3b: Suppliers CRUD -->
+                    <div id="suppliers-tab" class="tab-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin: 0;">Supplier Management</h3>
+                            <button class="admin-action-btn btn-primary" onclick="openAddSupplierModal()">+ Add Supplier</button>
+                        </div>
+                        <table id="suppliersTable" class="dataTable display" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Contact Person</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Address</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
                     <!-- Tab 4: Analytics Charts -->
                     <div id="analytics-tab" class="tab-content">
                         <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem;">Shop Revenue & Activity Charts</h3>
@@ -1137,6 +1167,12 @@
                     <input type="file" id="addFiles" name="images" accept="image/*" multiple style="background:none; border:none; padding:0;">
                 </div>
                 <div class="input-group">
+                    <label for="addSupplier">Supplier</label>
+                    <select id="addSupplier" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(197,168,128,0.25); border-radius: 8px; background-color: rgba(245, 239, 230, 0.25); font-family: var(--font-body); color: var(--text-primary);">
+                        <option value="">No Supplier / None</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label>Categories</label>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; margin-bottom: 0.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
@@ -1196,6 +1232,12 @@
                     <input type="file" id="editFiles" name="images" accept="image/*" multiple style="background:none; border:none; padding:0;">
                 </div>
                 <div class="input-group">
+                    <label for="editSupplier">Supplier</label>
+                    <select id="editSupplier" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(197,168,128,0.25); border-radius: 8px; background-color: rgba(245, 239, 230, 0.25); font-family: var(--font-body); color: var(--text-primary);">
+                        <option value="">No Supplier / None</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label>Categories</label>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; margin-bottom: 0.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.85rem; font-weight: normal; text-transform: none; color: var(--text-primary); cursor: pointer; user-select: none;">
@@ -1221,11 +1263,114 @@
         </div>
     </div>
 
+    <!-- ADD SUPPLIER MODAL -->
+    <div class="admin-modal" id="addSupplierModal">
+        <div class="admin-modal-card">
+            <button class="close-modal-btn" onclick="closeAddSupplierModal()">&times;</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem;">Add New Supplier</h3>
+            <form id="addSupplierForm">
+                <div class="input-group">
+                    <label for="addSupplierName">Supplier Name</label>
+                    <input type="text" id="addSupplierName" required>
+                </div>
+                <div class="input-group">
+                    <label for="addSupplierContact">Contact Person</label>
+                    <input type="text" id="addSupplierContact">
+                </div>
+                <div class="input-group">
+                    <label for="addSupplierEmail">Email Address</label>
+                    <input type="email" id="addSupplierEmail">
+                </div>
+                <div class="input-group">
+                    <label for="addSupplierPhone">Phone Number</label>
+                    <input type="text" id="addSupplierPhone">
+                </div>
+                <div class="input-group">
+                    <label for="addSupplierAddress">Physical Address</label>
+                    <textarea id="addSupplierAddress" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(197,168,128,0.25); border-radius: 8px; font-family: var(--font-body); background-color: rgba(245, 239, 230, 0.25); color: var(--text-primary);"></textarea>
+                </div>
+                <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Create Supplier</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT SUPPLIER MODAL -->
+    <div class="admin-modal" id="editSupplierModal">
+        <div class="admin-modal-card">
+            <button class="close-modal-btn" onclick="closeEditSupplierModal()">&times;</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem;">Edit Supplier</h3>
+            <form id="editSupplierForm">
+                <input type="hidden" id="editSupplierId">
+                <div class="input-group">
+                    <label for="editSupplierName">Supplier Name</label>
+                    <input type="text" id="editSupplierName" required>
+                </div>
+                <div class="input-group">
+                    <label for="editSupplierContact">Contact Person</label>
+                    <input type="text" id="editSupplierContact">
+                </div>
+                <div class="input-group">
+                    <label for="editSupplierEmail">Email Address</label>
+                    <input type="email" id="editSupplierEmail">
+                </div>
+                <div class="input-group">
+                    <label for="editSupplierPhone">Phone Number</label>
+                    <input type="text" id="editSupplierPhone">
+                </div>
+                <div class="input-group">
+                    <label for="editSupplierAddress">Physical Address</label>
+                    <textarea id="editSupplierAddress" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(197,168,128,0.25); border-radius: 8px; font-family: var(--font-body); background-color: rgba(245, 239, 230, 0.25); color: var(--text-primary);"></textarea>
+                </div>
+                <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW SUPPLIER MODAL -->
+    <div class="admin-modal" id="viewSupplierModal">
+        <div class="admin-modal-card" style="max-width: 650px;">
+            <button class="close-modal-btn" onclick="closeViewSupplierModal()">&times;</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Supplier Profile</h3>
+            
+            <div style="border-bottom: 1px solid rgba(197, 168, 128, 0.15); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                <h4 id="viewSupplierTitle" style="margin:0 0 0.5rem 0; font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700;"></h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                    <div><strong>Contact:</strong> <span id="viewSupplierContact"></span></div>
+                    <div><strong>Phone:</strong> <span id="viewSupplierPhone"></span></div>
+                    <div><strong>Email:</strong> <span id="viewSupplierEmail"></span></div>
+                    <div><strong>Address:</strong> <span id="viewSupplierAddress"></span></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h5 style="margin:0 0 0.5rem 0; font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--accent-gold-dark); letter-spacing: 0.05em; font-weight: 700;">Supplied Brands</h5>
+                <div id="viewSupplierBrands" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+            </div>
+
+            <div>
+                <h5 style="margin:0 0 0.5rem 0; font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; color: var(--accent-gold-dark); letter-spacing: 0.05em; font-weight: 700;">Supplied Products</h5>
+                <div style="max-height: 250px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
+                    <table class="activity-table" id="viewSupplierProductsTable">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Brand</th>
+                                <th>Sell Price</th>
+                                <th>Stock Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- jQuery & Datatables JS -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- Admin page controller script -->
-    <script src="../js/admin.js?v=1.0.4"></script>
+    <script src="../js/admin.js?v=1.0.6"></script>
     <script>
         function switchTab(tabId) {
             $('.menu-item').removeClass('active');
@@ -1238,6 +1383,7 @@
             else if (tabId === 'transactions-tab') $('#menu-transactions').addClass('active');
             else if (tabId === 'analytics-tab') $('#menu-analytics').addClass('active');
             else if (tabId === 'trash-tab') $('#menu-trash').addClass('active');
+            else if (tabId === 'suppliers-tab') $('#menu-suppliers').addClass('active');
             
             $('#' + tabId).addClass('active');
             
@@ -1249,6 +1395,7 @@
             else if (tabId === 'transactions-tab') title = 'Payments & Invoicing';
             else if (tabId === 'analytics-tab') title = 'Analytics Charts';
             else if (tabId === 'trash-tab') title = 'Trash Bin (Soft-Deleted Data)';
+            else if (tabId === 'suppliers-tab') title = 'Supplier Management';
             $('#current-tab-title').text(title);
             
             // Re-render DataTables sizing adjust if needed
@@ -1258,12 +1405,21 @@
                 $('#transactionsTable').DataTable().columns.adjust().draw();
             } else if (tabId === 'figurines-tab') {
                 $('#figurinesTable').DataTable().columns.adjust().draw();
+            } else if (tabId === 'suppliers-tab') {
+                $('#suppliersTable').DataTable().columns.adjust().draw();
+                if (typeof window.fetchSuppliers === 'function') {
+                    window.fetchSuppliers();
+                }
             } else if (tabId === 'trash-tab') {
                 $('#deletedFigurinesTable').DataTable().columns.adjust().draw();
                 $('#deletedUsersTable').DataTable().columns.adjust().draw();
             } else if (tabId === 'dashboard-tab') {
                 if (typeof window.loadAdminDashboard === 'function') {
                     window.loadAdminDashboard();
+                }
+            } else if (tabId === 'analytics-tab') {
+                if (typeof window.loadAnalyticsCharts === 'function') {
+                    window.loadAnalyticsCharts();
                 }
             }
         }

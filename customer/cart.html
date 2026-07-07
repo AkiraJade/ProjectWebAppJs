@@ -69,10 +69,22 @@
     <div class="auth-page-container" style="padding-top: 120px; padding-bottom: 60px; min-height: calc(100vh - 120px);">
         <div class="auth-card" style="max-width: 650px; width: 95%; padding: 2.5rem; margin-bottom: 20px;">
             <h2 class="auth-title" style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; color: var(--text-primary); text-align: center; margin-bottom: 0.2rem;">Your Cart</h2>
-            <p class="auth-subtitle" style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Review your Hirono designer toy selections</p>
+            <p class="auth-subtitle" style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; margin-bottom: 1.5rem;">Review your Hirono designer toy selections</p>
             
-            <!-- Cart Items List -->
-            <div id="cartItemsList" style="display: flex; flex-direction: column; gap: 1.2rem; margin: 1.5rem 0;">
+            <!-- Tab Navigation for Customer Cart Page -->
+            <div style="display: flex; border-bottom: 1px solid rgba(197, 168, 128, 0.15); margin-bottom: 1.5rem; gap: 1rem;">
+                <button id="tabCartBtn" onclick="switchCartTab('cart')" style="background: none; border: none; padding: 0.6rem 1rem; font-family: var(--font-heading); font-size: 0.92rem; font-weight: 600; color: var(--text-primary); border-bottom: 2px solid var(--text-primary); cursor: pointer; transition: all 0.3s; outline: none;">
+                    My Shopping Cart
+                </button>
+                <button id="tabToRateBtn" onclick="switchCartTab('to-rate')" style="background: none; border: none; padding: 0.6rem 1rem; font-family: var(--font-heading); font-size: 0.92rem; font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; outline: none; display: flex; align-items: center; gap: 6px;">
+                    To Rate <span id="toRateCountBadge" style="display: none; background: #c94a4a; color: #fff; font-size: 0.72rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">0</span>
+                </button>
+            </div>
+
+            <!-- CART SECTION -->
+            <div id="cartSection">
+                <!-- Cart Items List -->
+                <div id="cartItemsList" style="display: flex; flex-direction: column; gap: 1.2rem; margin: 1.5rem 0;">
                 <div style="text-align: center; padding: 2rem 0; color: var(--text-secondary);">Loading your cart items...</div>
             </div>
             
@@ -191,7 +203,18 @@
                 <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Add some beautiful Hirono figurines to start your collection.</p>
                 <button class="btn-auth-submit" onclick="window.location.href='shop.html'" style="display: inline-block; width: auto; padding: 0.7rem 2rem;">Shop Now</button>
             </div>
-            
+            </div>
+
+            <!-- TO RATE SECTION -->
+            <div id="toRateSection" style="display: none;">
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">
+                    These are the Hirono figurines you purchased that haven't been rated yet. Click **Rate Product** to share your review!
+                </p>
+                <div id="toRateItemsList" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="text-align: center; padding: 2.2rem 0; color: var(--text-secondary);">Loading items to rate...</div>
+                </div>
+            </div>
+
             <div class="auth-back-link" style="text-align: center; margin-top: 1.5rem;">
                 <a href="shop.html">
                     <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
@@ -250,7 +273,7 @@
     <footer class="main-footer" id="mainFooter">
         <div class="footer-content">
             <div class="footer-left">
-                <p class="credits-text">Credits to owner Orlanda and Navasca @2026.</p>
+                <p class="credits-text">&copy; 2026 Orlanda and Navasca. All rights reserved.</p>
             </div>
             <div class="footer-right">
                 <a href="#terms" class="footer-link">Terms</a>
@@ -662,10 +685,106 @@
             });
         };
 
+        // Tab switching logic for Cart Page
+        window.switchCartTab = function(tabId) {
+            if (tabId === 'cart') {
+                $('#tabCartBtn').css({ 'color': 'var(--text-primary)', 'border-bottom': '2px solid var(--text-primary)' });
+                $('#tabToRateBtn').css({ 'color': 'var(--text-secondary)', 'border-bottom': '2px solid transparent' });
+                $('#cartSection').show();
+                $('#toRateSection').hide();
+                loadCart();
+            } else if (tabId === 'to-rate') {
+                $('#tabCartBtn').css({ 'color': 'var(--text-secondary)', 'border-bottom': '2px solid transparent' });
+                $('#tabToRateBtn').css({ 'color': 'var(--text-primary)', 'border-bottom': '2px solid var(--text-primary)' });
+                $('#cartSection').hide();
+                $('#toRateSection').show();
+                fetchToRateItems();
+            }
+        };
+
+        function fetchToRateItems() {
+            if (!token) {
+                $('#toRateItemsList').html('<div style="text-align: center; padding: 2rem 0; color: var(--text-secondary);">Sign in to view items to rate.</div>');
+                return;
+            }
+
+            $.ajax({
+                url: `${API_URL}/reviews/to-rate`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const listContainer = $('#toRateItemsList');
+                    listContainer.empty();
+                    const items = data.items || [];
+
+                    // Update count badge
+                    const badge = $('#toRateCountBadge');
+                    if (items.length > 0) {
+                        badge.text(items.length).show();
+                    } else {
+                        badge.hide();
+                    }
+
+                    if (items.length === 0) {
+                        listContainer.html(`
+                            <div style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+                                <div style="font-size: 2.2rem; margin-bottom: 0.8rem;">✓</div>
+                                <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.4rem; font-weight: 600;">All Caught Up!</h4>
+                                <p style="font-size: 0.85rem;">You have reviewed all your purchased figurines. Thank you for your feedback!</p>
+                            </div>
+                        `);
+                        return;
+                    }
+
+                    items.forEach(item => {
+                        const img = resolveImagePath(item.img_path);
+                        listContainer.append(`
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.8rem 1rem; background: rgba(245,239,230,0.25); border: 1px solid rgba(197,168,128,0.12); border-radius: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+                                    <img src="${img}" style="width: 50px; height: 50px; border-radius: 8px; border: 1px solid rgba(197,168,128,0.15); object-fit: contain; background: #fff; flex-shrink: 0;" alt="${item.description}">
+                                    <div style="min-width: 0; flex: 1;">
+                                        <h4 style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">${item.description}</h4>
+                                        <span style="font-size: 0.82rem; color: var(--accent-gold-dark); font-weight: 600;">$${parseFloat(item.sell_price).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <button onclick="window.location.href='item.html?id=${item.item_id}#reviewFormArea'" class="btn-auth-submit" style="width: auto; padding: 0.5rem 1.2rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: none; background: var(--text-primary); color: #fff; cursor: pointer; height: auto;">
+                                    Rate Product
+                                </button>
+                            </div>
+                        `);
+                    });
+                },
+                error: function(xhr) {
+                    console.error("To Rate items load error:", xhr);
+                    $('#toRateItemsList').html('<div style="text-align: center; color: #c94a4a; font-size: 0.88rem; padding: 1.5rem 0;">Error loading items to rate.</div>');
+                }
+            });
+        }
+
+        // Fetch to-rate count badge initially
+        function loadToRateBadge() {
+            if (!token) return;
+            $.ajax({
+                url: `${API_URL}/reviews/to-rate`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const items = data.items || [];
+                    const badge = $('#toRateCountBadge');
+                    if (items.length > 0) {
+                        badge.text(items.length).show();
+                    } else {
+                        badge.hide();
+                    }
+                }
+            });
+        }
+
         // Initial trigger
         $(document).ready(function() {
             loadCart();
             loadAddresses();
+            loadToRateBadge();
         });
     </script>
 </body>

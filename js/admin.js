@@ -161,7 +161,16 @@ $(document).ready(function () {
     const figurinesTable = $('#figurinesTable').DataTable({
         columns: [
             { data: 'item_id' },
-            { data: 'description' },
+            { 
+                data: 'description',
+                render: (data, type, row) => {
+                    const supplierLabel = row.supplier ? `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Supplier: <strong>${row.supplier.name}</strong></div>` : `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Supplier: None</div>`;
+                    return `<div>
+                        <span style="font-weight:500;">${data}</span>
+                        ${supplierLabel}
+                    </div>`;
+                }
+            },
             { 
                 data: 'cost_price',
                 render: data => `$${parseFloat(data).toFixed(2)}`
@@ -434,17 +443,28 @@ $(document).ready(function () {
                                 `<img src="${imgUrl}" style="height:35px; border-radius:4px; border:1px solid #c5a880; vertical-align:middle; margin-right:8px;" alt="toy">` : 
                                 `<span style="display:inline-block; width:35px; height:35px; background:#eef0f3; border-radius:4px; vertical-align:middle; margin-right:8px;"></span>`;
                             
+                            const supplierHtml = item.supplier_name ? 
+                                `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Supplier: <strong>${item.supplier_name}</strong></div>` : 
+                                `<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;">Supplier: None</div>`;
+                                
+                            const reorderLink = item.supplier_email ? 
+                                `<a class="quick-action-link" href="mailto:${item.supplier_email}?subject=Restock Request: ${encodeURIComponent(item.description)}&body=Hi ${encodeURIComponent(item.supplier_name || 'Supplier')},%0D%0A%0D%0AWe would like to request a restock of our figurine item: ${encodeURIComponent(item.description)}.%0D%0A%0D%0ACurrently we only have ${item.quantity} units left in stock.%0D%0A%0D%0AThank you!%0D%0AAdmin">Order Stock</a>` : 
+                                `<a class="quick-action-link" onclick="openEditModal(${item.item_id})">Restock</a>`;
+
                             lowStockBody.append(`
                                 <tr>
                                     <td>
                                         <div style="display:flex; align-items:center;">
                                             ${imgTag}
-                                            <span style="font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${item.description}</span>
+                                            <div style="display:flex; flex-direction:column;">
+                                                <span style="font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${item.description}</span>
+                                                ${supplierHtml}
+                                            </div>
                                         </div>
                                     </td>
                                     <td><span class="restock-badge">${item.quantity} left</span></td>
                                     <td>$${parseFloat(item.sell_price).toFixed(2)}</td>
-                                    <td><a class="quick-action-link" onclick="openEditModal(${item.item_id})">Restock</a></td>
+                                    <td>${reorderLink}</td>
                                 </tr>
                             `);
                         });
@@ -491,6 +511,7 @@ $(document).ready(function () {
         formData.append('quantity', $('#addQty').val());
         formData.append('tags', JSON.stringify(getAddModalTags()));
         formData.append('category', JSON.stringify(getAddModalCategories()));
+        formData.append('supplier_id', $('#addSupplier').val());
 
         const fileInput = document.getElementById('addFiles');
         if (fileInput.files.length > 0) {
@@ -531,6 +552,7 @@ $(document).ready(function () {
         formData.append('quantity', $('#editQty').val());
         formData.append('tags', JSON.stringify(getEditModalTags()));
         formData.append('category', JSON.stringify(getEditModalCategories()));
+        formData.append('supplier_id', $('#editSupplier').val());
         formData.append('keep_images', JSON.stringify(editKeptImages));
 
         const fileInput = document.getElementById('editFiles');
@@ -615,6 +637,7 @@ $(document).ready(function () {
                     $('#editCost').val(item.cost_price);
                     $('#editSell').val(item.sell_price);
                     $('#editQty').val(item.quantity);
+                    $('#editSupplier').val(item.supplier ? item.supplier.id : '');
 
                     // Populate kept images list
                     editKeptImages = [];
@@ -896,6 +919,9 @@ $(document).ready(function () {
         });
     }
 
+    // Expose to window scope
+    window.loadAnalyticsCharts = loadAnalyticsCharts;
+
     // Trigger charts load
     loadAnalyticsCharts();
 
@@ -950,5 +976,259 @@ $(document).ready(function () {
                 alert('Failed to export transactions.');
             }
         });
+    };
+
+    // --------------------------------------------------------
+    // 7. SUPPLIER CRUD & LOGIC
+    // --------------------------------------------------------
+    const suppliersTable = $('#suppliersTable').DataTable({
+        columns: [
+            { data: 'id' },
+            { 
+                data: 'name',
+                render: (data, type, row) => `<a href="javascript:void(0)" class="quick-action-link" style="font-weight:700;" onclick="viewSupplierDetails(${row.id})">${data}</a>`
+            },
+            { data: 'contact_person', defaultContent: 'N/A' },
+            { data: 'email', defaultContent: 'N/A' },
+            { data: 'phone', defaultContent: 'N/A' },
+            { data: 'address', defaultContent: 'N/A' },
+            {
+                data: 'id',
+                render: data => `
+                    <button class="admin-action-btn btn-success" onclick="openEditSupplierModal(${data})">Edit</button>
+                    <button class="admin-action-btn btn-danger" onclick="deleteSupplier(${data})">Delete</button>
+                `
+            }
+        ]
+    });
+
+    function fetchSuppliers() {
+        $.ajax({
+            url: `${API_URL}/suppliers`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    suppliersTable.clear().rows.add(data.rows || []).draw();
+                    populateSupplierDropdowns(data.rows || []);
+                }
+            },
+            error: function(xhr) {
+                console.error('Failed to load suppliers.');
+            }
+        });
+    }
+    window.fetchSuppliers = fetchSuppliers;
+
+    function populateSupplierDropdowns(suppliers) {
+        const addDropdown = $('#addSupplier');
+        const editDropdown = $('#editSupplier');
+        
+        // Save current values to restore them
+        const addSelected = addDropdown.val();
+        const editSelected = editDropdown.val();
+
+        addDropdown.empty().append('<option value="">No Supplier / None</option>');
+        editDropdown.empty().append('<option value="">No Supplier / None</option>');
+
+        suppliers.forEach(sup => {
+            const opt = `<option value="${sup.id}">${sup.name}</option>`;
+            addDropdown.append(opt);
+            editDropdown.append(opt);
+        });
+
+        // Restore values
+        if (addSelected) addDropdown.val(addSelected);
+        if (editSelected) editDropdown.val(editSelected);
+    }
+
+    // Call fetchSuppliers initially to populate the dropdowns
+    fetchSuppliers();
+
+    // Modal triggers for Supplier
+    window.openAddSupplierModal = () => {
+        $('#addSupplierModal').addClass('active');
+    };
+
+    window.closeAddSupplierModal = () => {
+        $('#addSupplierModal').removeClass('active');
+        $('#addSupplierForm')[0].reset();
+    };
+
+    window.openEditSupplierModal = (id) => {
+        $.ajax({
+            url: `${API_URL}/suppliers/${id}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success && data.result) {
+                    const sup = data.result;
+                    $('#editSupplierId').val(sup.id);
+                    $('#editSupplierName').val(sup.name);
+                    $('#editSupplierContact').val(sup.contact_person);
+                    $('#editSupplierEmail').val(sup.email);
+                    $('#editSupplierPhone').val(sup.phone);
+                    $('#editSupplierAddress').val(sup.address);
+                    $('#editSupplierModal').addClass('active');
+                }
+            },
+            error: function(xhr) {
+                alert('Failed to load supplier details.');
+            }
+        });
+    };
+
+    window.closeEditSupplierModal = () => {
+        $('#editSupplierModal').removeClass('active');
+        $('#editSupplierForm')[0].reset();
+    };
+
+    // Add Supplier Form Submit
+    $('#addSupplierForm').on('submit', function (e) {
+        e.preventDefault();
+        const payload = {
+            name: $('#addSupplierName').val(),
+            contact_person: $('#addSupplierContact').val(),
+            email: $('#addSupplierEmail').val(),
+            phone: $('#addSupplierPhone').val(),
+            address: $('#addSupplierAddress').val()
+        };
+
+        $.ajax({
+            url: `${API_URL}/suppliers`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            dataType: 'json',
+            success: function(data) {
+                alert('Supplier created successfully!');
+                closeAddSupplierModal();
+                fetchSuppliers();
+            },
+            error: function(xhr) {
+                const errData = xhr.responseJSON || {};
+                alert('Error creating supplier: ' + (errData.error || 'Failed to create supplier'));
+            }
+        });
+    });
+
+    // Edit Supplier Form Submit
+    $('#editSupplierForm').on('submit', function (e) {
+        e.preventDefault();
+        const id = $('#editSupplierId').val();
+        const payload = {
+            name: $('#editSupplierName').val(),
+            contact_person: $('#editSupplierContact').val(),
+            email: $('#editSupplierEmail').val(),
+            phone: $('#editSupplierPhone').val(),
+            address: $('#editSupplierAddress').val()
+        };
+
+        $.ajax({
+            url: `${API_URL}/suppliers/${id}`,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            dataType: 'json',
+            success: function(data) {
+                alert('Supplier updated successfully!');
+                closeEditSupplierModal();
+                fetchSuppliers();
+                // reload figurines and dashboard to reflect updated supplier name
+                fetchFigurines();
+                loadAdminDashboard();
+            },
+            error: function(xhr) {
+                const errData = xhr.responseJSON || {};
+                alert('Error updating supplier: ' + (errData.error || 'Failed to update supplier'));
+            }
+        });
+    });
+
+    // Delete Supplier
+    window.deleteSupplier = function(id) {
+        if (confirm('Are you sure you want to delete this supplier? Associated items will have their supplier set to None.')) {
+            $.ajax({
+                url: `${API_URL}/suppliers/${id}`,
+                type: 'DELETE',
+                dataType: 'json',
+                success: function(data) {
+                    alert('Supplier deleted successfully.');
+                    fetchSuppliers();
+                    fetchFigurines();
+                    loadAdminDashboard();
+                },
+                error: function(xhr) {
+                    const errData = xhr.responseJSON || {};
+                    alert('Failed to delete supplier: ' + (errData.error || 'Failed to delete supplier'));
+                }
+            });
+        }
+    };
+
+    // View Supplier Details (with Brands and Supplied Products)
+    window.viewSupplierDetails = (id) => {
+        $.ajax({
+            url: `${API_URL}/suppliers/${id}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success && data.result) {
+                    const sup = data.result;
+                    $('#viewSupplierTitle').text(sup.name);
+                    $('#viewSupplierContact').text(sup.contact_person || 'N/A');
+                    $('#viewSupplierPhone').text(sup.phone || 'N/A');
+                    $('#viewSupplierEmail').text(sup.email || 'N/A');
+                    $('#viewSupplierAddress').text(sup.address || 'N/A');
+
+                    // Extract unique brands
+                    const brands = new Set();
+                    const productsBody = $('#viewSupplierProductsTable tbody');
+                    productsBody.empty();
+
+                    if (sup.items && sup.items.length > 0) {
+                        sup.items.forEach(item => {
+                            const brandName = item.brand ? item.brand.name : 'Unknown Brand';
+                            brands.add(brandName);
+
+                            productsBody.append(`
+                                <tr>
+                                    <td><strong>${item.name || item.description}</strong></td>
+                                    <td>${brandName}</td>
+                                    <td>$${parseFloat(item.sell_price).toFixed(2)}</td>
+                                    <td><span class="restock-badge" style="background:${item.quantity <= 5 ? 'rgba(201, 74, 74, 0.1)' : 'rgba(46, 125, 50, 0.1)'}; color:${item.quantity <= 5 ? '#c94a4a' : '#2e7d32'};">${item.quantity} left</span></td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        productsBody.append(`
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 1.5rem 0;">No products currently linked to this supplier.</td>
+                            </tr>
+                        `);
+                    }
+
+                    // Render Brands tags
+                    const brandsWrapper = $('#viewSupplierBrands');
+                    brandsWrapper.empty();
+                    if (brands.size > 0) {
+                        brands.forEach(b => {
+                            brandsWrapper.append(`<span class="tag-badge" style="box-shadow:none;"><span class="tag-hash">★</span><span class="tag-text">${b}</span></span>`);
+                        });
+                    } else {
+                        brandsWrapper.append(`<span style="font-size:0.85rem; color:var(--text-secondary);">No brands supplied.</span>`);
+                    }
+
+                    $('#viewSupplierModal').addClass('active');
+                }
+            },
+            error: function(xhr) {
+                alert('Failed to fetch supplier profile.');
+            }
+        });
+    };
+
+    window.closeViewSupplierModal = () => {
+        $('#viewSupplierModal').removeClass('active');
     };
 });
