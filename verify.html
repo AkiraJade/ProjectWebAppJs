@@ -4,41 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email — Little Mono</title>
-    <meta name="description" content="Verify your email address to activate your Little Mono collector profile.">
+    <meta name="description" content="Verify your Little Mono account email address.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .verification-status-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            display: inline-block;
+        .verify-status-container {
+            text-align: center;
+            padding: 2rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        .status-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(197, 168, 128, 0.15);
-            border-radius: 50%;
-            border-top-color: var(--accent-gold);
-            animation: spin 1s ease-in-out infinite;
+        .status-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.2rem;
             display: inline-block;
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .status-title {
+            font-family: var(--font-heading);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.02em;
+        }
+        .status-message {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.8rem;
+            max-width: 320px;
+        }
+        /* Spinner styling */
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(197, 168, 128, 0.15);
+            border-top-color: var(--accent-gold-dark);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
             margin-bottom: 1.5rem;
         }
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .status-card {
-            text-align: center;
-            padding: 2.5rem 2rem;
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
-        .btn-status-action {
-            display: inline-block;
-            margin-top: 1.8rem;
-            width: 100%;
-            text-decoration: none;
-            text-align: center;
+        .hidden {
+            display: none !important;
+        }
+        #verifySubtitle {
+            transition: color 0.3s ease;
         }
     </style>
 </head>
@@ -52,71 +76,143 @@
                 </div>
             </div>
 
-            <!-- Loading State -->
-            <div id="loadingState" class="status-card">
-                <div class="status-spinner"></div>
-                <h2 class="auth-title">Verifying Account</h2>
-                <p class="auth-subtitle">Please wait while we activate your collector profile...</p>
+            <!-- 1. Automatic verification loading -->
+            <div id="automaticVerifySection" class="verify-status-container">
+                <div class="spinner"></div>
+                <h3 class="status-title">Verifying Email</h3>
+                <p class="status-message">Connecting to authentication server, please hold on...</p>
             </div>
 
-            <!-- Success State -->
-            <div id="successState" class="status-card" style="display: none;">
-                <span class="verification-status-icon">✨</span>
-                <h2 class="auth-title">Verification Successful</h2>
-                <p class="auth-subtitle" id="successMsg">Your email has been verified. Welcome to our unboxing collector community!</p>
-                <a href="login.html" class="btn-auth-submit btn-status-action">Proceed to Sign In</a>
+            <!-- 2. Success state -->
+            <div id="successVerifySection" class="verify-status-container hidden">
+                <span class="status-icon">✨</span>
+                <h3 class="status-title">Email Verified</h3>
+                <p class="status-message">Your email has been successfully verified! You can now access your Little Mono account.</p>
+                <button onclick="window.location.href='login.html'" class="btn-auth-submit" style="width: 100%; max-width: 280px;">Go to Sign In</button>
             </div>
 
-            <!-- Error State -->
-            <div id="errorState" class="status-card" style="display: none;">
-                <span class="verification-status-icon" style="color: #C94A4A;">⚠️</span>
-                <h2 class="auth-title" style="color: #C94A4A;">Verification Failed</h2>
-                <p class="auth-subtitle" id="errorMsg">The link is invalid or has expired.</p>
-                <a href="login.html" class="btn-auth-submit btn-status-action" style="background-color: #766e65; border-color: rgba(28, 28, 28, 0.15);">Back to Login</a>
+            <!-- 3. Error / Manual form state -->
+            <div id="manualVerifySection" class="hidden">
+                <form class="auth-form active" id="manualVerifyForm">
+                    <h2 class="auth-title">Verify Email</h2>
+                    <p class="auth-subtitle" id="verifySubtitle">Enter your details to manually activate your account</p>
+                    
+                    <div class="input-group">
+                        <label for="verifyEmail">Email Address</label>
+                        <input type="email" id="verifyEmail" placeholder="Enter your email" required autocomplete="email">
+                    </div>
+                    <div class="input-group">
+                        <label for="verifyToken">Verification Code</label>
+                        <input type="text" id="verifyToken" placeholder="Enter 6-digit code" required pattern="[0-9]{6}" maxlength="6" autocomplete="off">
+                    </div>
+                    
+                    <button type="submit" class="btn-auth-submit" id="submitBtn">Verify Account</button>
+                </form>
+            </div>
+
+            <div class="auth-back-link">
+                <a href="login.html">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="transform: rotate(180deg); display: inline-block; vertical-align: middle;">
+                        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    <span style="vertical-align: middle;">Back to Sign In</span>
+                </a>
             </div>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script>
-        const API_URL = 'http://localhost:3000/api/v1';
+        const API_BASE_URL = 'http://localhost:3000/api/v1';
 
-        $(document).ready(function() {
-            const params = new URLSearchParams(window.location.search);
-            const email = params.get('email');
-            const token = params.get('token');
+        // Elements
+        const autoSec = document.getElementById('automaticVerifySection');
+        const successSec = document.getElementById('successVerifySection');
+        const manualSec = document.getElementById('manualVerifySection');
+        const manualForm = document.getElementById('manualVerifyForm');
+        const verifySubtitle = document.getElementById('verifySubtitle');
+        const submitBtn = document.getElementById('submitBtn');
 
-            if (!email || !token) {
-                $('#loadingState').hide();
-                $('#errorMsg').text('Missing required verification parameters.');
-                $('#errorState').show();
-                return;
-            }
+        // Extract parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const emailParam = urlParams.get('email');
+        const tokenParam = urlParams.get('token');
 
-            // Perform verification AJAX call
-            $.ajax({
-                url: `${API_URL}/verify`,
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ email, token }),
-                dataType: 'json',
-                success: function(res) {
-                    $('#loadingState').hide();
-                    if (res.success) {
-                        $('#successMsg').text(res.message || 'Your email has been successfully verified! You can now log in.');
-                        $('#successState').show();
-                    } else {
-                        $('#errorMsg').text(res.error || 'Failed to verify email address.');
-                        $('#errorState').show();
-                    }
-                },
-                error: function(xhr) {
-                    $('#loadingState').hide();
-                    const errData = xhr.responseJSON || {};
-                    $('#errorMsg').text(errData.error || 'The verification link may have expired or is invalid.');
-                    $('#errorState').show();
+        // Perform verification AJAX request
+        async function runVerification(email, token) {
+            try {
+                const data = await $.ajax({
+                    url: `${API_BASE_URL}/verify`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ email, token }),
+                    dataType: 'json'
+                });
+
+                if (data.success) {
+                    // Switch to success view
+                    autoSec.classList.add('hidden');
+                    manualSec.classList.add('hidden');
+                    successSec.classList.remove('hidden');
+
+                    // Auto redirect after 2.5 seconds
+                    setTimeout(() => {
+                        window.location.href = `login.html?verified=true&email=${encodeURIComponent(email)}`;
+                    }, 2500);
+                } else {
+                    showError(data.message || data.error || "Verification failed. Please try again.");
                 }
-            });
+            } catch (xhr) {
+                const errData = xhr.responseJSON || {};
+                showError(errData.error || errData.message || "Cannot connect to verification server.");
+            }
+        }
+
+        function showError(message) {
+            // Hide automatic loading
+            autoSec.classList.add('hidden');
+            
+            // Show manual section and update instruction subtitle
+            manualSec.classList.remove('hidden');
+            verifySubtitle.innerText = message;
+            verifySubtitle.style.color = '#C94A4A'; // Error red accent
+            
+            // Prefill email / token if they were provided
+            if (emailParam) {
+                document.getElementById('verifyEmail').value = emailParam;
+            }
+            if (tokenParam) {
+                document.getElementById('verifyToken').value = tokenParam;
+            }
+        }
+
+        // Init flow
+        if (emailParam && tokenParam) {
+            runVerification(emailParam, tokenParam);
+        } else {
+            // No URL parameters: go straight to manual entry
+            autoSec.classList.add('hidden');
+            manualSec.classList.remove('hidden');
+            if (emailParam) {
+                document.getElementById('verifyEmail').value = emailParam;
+            }
+        }
+
+        // Manual form submission
+        manualForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('verifyEmail').value.trim();
+            const token = document.getElementById('verifyToken').value.trim();
+
+            if (!email || !token) return;
+
+            submitBtn.innerText = "Verifying...";
+            submitBtn.disabled = true;
+
+            await runVerification(email, token);
+
+            submitBtn.innerText = "Verify Account";
+            submitBtn.disabled = false;
         });
     </script>
 </body>

@@ -75,9 +75,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const regEmail = urlParams.get('email');
     const regSuccess = urlParams.get('registered');
+    const regVerified = urlParams.get('verified');
     
-    if (regSuccess && regEmail) {
-        showToast("Account created successfully! Please sign in.", "success");
+    if (regVerified && regEmail) {
+        showToast("Email verified successfully! You can now sign in.", "success");
+        const loginEmailInput = document.getElementById('loginEmail');
+        if (loginEmailInput) {
+            loginEmailInput.value = regEmail;
+        }
+        const loginPassInput = document.getElementById('loginPassword');
+        if (loginPassInput) {
+            loginPassInput.focus();
+        }
+    } else if (regSuccess && regEmail) {
+        showToast("Account created! Please check Mailtrap to verify your email before logging in.", "success");
         const loginEmailInput = document.getElementById('loginEmail');
         if (loginEmailInput) {
             loginEmailInput.value = regEmail;
