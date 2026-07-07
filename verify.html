@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email — Little Mono</title>
+    <meta name="description" content="Verify your email address to activate your Little Mono collector profile.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .verification-status-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+        .status-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(197, 168, 128, 0.15);
+            border-radius: 50%;
+            border-top-color: var(--accent-gold);
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-card {
+            text-align: center;
+            padding: 2.5rem 2rem;
+        }
+        .btn-status-action {
+            display: inline-block;
+            margin-top: 1.8rem;
+            width: 100%;
+            text-decoration: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-page-container">
+        <div class="auth-card">
+            <div class="auth-card-header" onclick="window.location.href='index.html'">
+                <div class="logo">
+                    <span class="brand-name">LITTLE MONO</span>
+                    <span class="sub-brand">DESIGNER TOYS</span>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="status-card">
+                <div class="status-spinner"></div>
+                <h2 class="auth-title">Verifying Account</h2>
+                <p class="auth-subtitle">Please wait while we activate your collector profile...</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" class="status-card" style="display: none;">
+                <span class="verification-status-icon">✨</span>
+                <h2 class="auth-title">Verification Successful</h2>
+                <p class="auth-subtitle" id="successMsg">Your email has been verified. Welcome to our unboxing collector community!</p>
+                <a href="login.html" class="btn-auth-submit btn-status-action">Proceed to Sign In</a>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="status-card" style="display: none;">
+                <span class="verification-status-icon" style="color: #C94A4A;">⚠️</span>
+                <h2 class="auth-title" style="color: #C94A4A;">Verification Failed</h2>
+                <p class="auth-subtitle" id="errorMsg">The link is invalid or has expired.</p>
+                <a href="login.html" class="btn-auth-submit btn-status-action" style="background-color: #766e65; border-color: rgba(28, 28, 28, 0.15);">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        const API_URL = 'http://localhost:3000/api/v1';
+
+        $(document).ready(function() {
+            const params = new URLSearchParams(window.location.search);
+            const email = params.get('email');
+            const token = params.get('token');
+
+            if (!email || !token) {
+                $('#loadingState').hide();
+                $('#errorMsg').text('Missing required verification parameters.');
+                $('#errorState').show();
+                return;
+            }
+
+            // Perform verification AJAX call
+            $.ajax({
+                url: `${API_URL}/verify`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ email, token }),
+                dataType: 'json',
+                success: function(res) {
+                    $('#loadingState').hide();
+                    if (res.success) {
+                        $('#successMsg').text(res.message || 'Your email has been successfully verified! You can now log in.');
+                        $('#successState').show();
+                    } else {
+                        $('#errorMsg').text(res.error || 'Failed to verify email address.');
+                        $('#errorState').show();
+                    }
+                },
+                error: function(xhr) {
+                    $('#loadingState').hide();
+                    const errData = xhr.responseJSON || {};
+                    $('#errorMsg').text(errData.error || 'The verification link may have expired or is invalid.');
+                    $('#errorState').show();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
