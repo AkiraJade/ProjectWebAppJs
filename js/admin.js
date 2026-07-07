@@ -158,7 +158,7 @@ $(document).ready(function () {
     // --------------------------------------------------------
 
     // A. Figurines Table
-    const figurinesTable = $('#figurinesTable').DataTable({
+    const figurinesTable = $('#figurinesTable').length ? $('#figurinesTable').DataTable({
         columns: [
             { data: 'item_id' },
             { 
@@ -192,10 +192,10 @@ $(document).ready(function () {
                 `
             }
         ]
-    });
+    }) : null;
 
     // B. Users Table
-    const usersTable = $('#usersTable').DataTable({
+    const usersTable = $('#usersTable').length ? $('#usersTable').DataTable({
         columns: [
             { data: 'id' },
             { data: 'name' },
@@ -227,10 +227,10 @@ $(document).ready(function () {
                 `
             }
         ]
-    });
+    }) : null;
 
     // C. Transactions Table
-    const transactionsTable = $('#transactionsTable').DataTable({
+    const transactionsTable = $('#transactionsTable').length ? $('#transactionsTable').DataTable({
         columns: [
             { data: 'transaction_id' },
             { data: 'orderinfo_id' },
@@ -264,10 +264,10 @@ $(document).ready(function () {
                 `
             }
         ]
-    });
+    }) : null;
 
     // D. Soft-deleted Figurines Table
-    const deletedFigurinesTable = $('#deletedFigurinesTable').DataTable({
+    const deletedFigurinesTable = $('#deletedFigurinesTable').length ? $('#deletedFigurinesTable').DataTable({
         columns: [
             { data: 'item_id' },
             { data: 'description' },
@@ -287,10 +287,10 @@ $(document).ready(function () {
                 `
             }
         ]
-    });
+    }) : null;
 
     // E. Deleted/Deactivated Users Table
-    const deletedUsersTable = $('#deletedUsersTable').DataTable({
+    const deletedUsersTable = $('#deletedUsersTable').length ? $('#deletedUsersTable').DataTable({
         columns: [
             { data: 'id' },
             { data: 'name' },
@@ -304,7 +304,7 @@ $(document).ready(function () {
                 `
             }
         ]
-    });
+    }) : null;
 
     // --------------------------------------------------------
     // 1.1 DATA FETCHERS USING FETCH
@@ -342,6 +342,7 @@ $(document).ready(function () {
     window.fetchFigurines = fetchFigurines;
 
     function fetchTransactions() {
+        if (!transactionsTable) return;
         $.ajax({
             url: `${API_URL}/transactions`,
             type: 'GET',
@@ -356,6 +357,7 @@ $(document).ready(function () {
     }
 
     function fetchDeletedFigurines() {
+        if (!deletedFigurinesTable) return;
         $.ajax({
             url: `${API_URL}/items/deleted`,
             type: 'GET',
@@ -370,6 +372,7 @@ $(document).ready(function () {
     }
 
     function fetchDeletedUsers() {
+        if (!deletedUsersTable) return;
         $.ajax({
             url: `${API_URL}/users/deleted`,
             type: 'GET',
@@ -384,6 +387,7 @@ $(document).ready(function () {
     }
 
     function loadAdminDashboard() {
+        if (!$('#dashTotalSales').length) return;
         $.ajax({
             url: `${API_URL}/dashboard/summary`,
             type: 'GET',
@@ -489,13 +493,46 @@ $(document).ready(function () {
     // Expose to window scope so switchTab can call it
     window.loadAdminDashboard = loadAdminDashboard;
 
-    // Trigger initial data loads
+    // Trigger initial data loads based on what's active on the current page
     fetchFigurines();
     fetchUsers();
     fetchTransactions();
     fetchDeletedFigurines();
     fetchDeletedUsers();
     loadAdminDashboard();
+
+    // --------------------------------------------------------
+    // Automatic Sidebar Active State Highlighting
+    // --------------------------------------------------------
+    const pathname = window.location.pathname;
+    const page = pathname.split('/').pop().toLowerCase() || 'admin.html';
+    
+    $('.menu-item').removeClass('active');
+    
+    let activeTitle = 'Dashboard Overview';
+    if (page === 'admin.html' || page === 'dashboard.html') {
+        $('#menu-dashboard').addClass('active');
+        activeTitle = 'Dashboard Overview';
+    } else if (page === 'figurines.html') {
+        $('#menu-figurines').addClass('active');
+        activeTitle = 'Figurines Catalog';
+    } else if (page === 'users.html') {
+        $('#menu-users').addClass('active');
+        activeTitle = 'User Collector Accounts';
+    } else if (page === 'transactions.html') {
+        $('#menu-transactions').addClass('active');
+        activeTitle = 'Payments & Invoicing';
+    } else if (page === 'suppliers.html') {
+        $('#menu-suppliers').addClass('active');
+        activeTitle = 'Supplier Management';
+    } else if (page === 'analytics.html') {
+        $('#menu-analytics').addClass('active');
+        activeTitle = 'Analytics Charts';
+    } else if (page === 'trash.html') {
+        $('#menu-trash').addClass('active');
+        activeTitle = 'Trash Bin (Soft-Deleted Data)';
+    }
+    $('#current-tab-title').text(activeTitle);
 
     // --------------------------------------------------------
     // 2. PRODUCT CRUD HANDLERS
@@ -981,7 +1018,7 @@ $(document).ready(function () {
     // --------------------------------------------------------
     // 7. SUPPLIER CRUD & LOGIC
     // --------------------------------------------------------
-    const suppliersTable = $('#suppliersTable').DataTable({
+    const suppliersTable = $('#suppliersTable').length ? $('#suppliersTable').DataTable({
         columns: [
             { data: 'id' },
             { 
@@ -1000,9 +1037,9 @@ $(document).ready(function () {
                 `
             }
         ]
-    });
+    }) : null;
 
-    const expensesTable = $('#expensesTable').DataTable({
+    const expensesTable = $('#expensesTable').length ? $('#expensesTable').DataTable({
         columns: [
             { data: 'po_number' },
             { 
@@ -1020,9 +1057,10 @@ $(document).ready(function () {
             { data: 'notes', defaultContent: '' }
         ],
         order: [[2, 'desc']]
-    });
+    }) : null;
 
     function fetchSuppliers() {
+        if (!suppliersTable) return;
         $.ajax({
             url: `${API_URL}/suppliers`,
             type: 'GET',
@@ -1381,6 +1419,7 @@ $(document).ready(function () {
     };
 
     function fetchExpenses() {
+        if (!expensesTable) return;
         $.ajax({
             url: `${API_URL}/purchase-orders`,
             type: 'GET',

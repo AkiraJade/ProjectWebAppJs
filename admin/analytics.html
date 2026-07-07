@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel — Little Mono</title>
+    <title>Analytics Charts — Little Mono</title>
     <!-- Inline Authorization Guard -->
     <script>
         const token = localStorage.getItem('token');
@@ -31,6 +31,8 @@
     <link rel="stylesheet" href="../css/style.css">
     <!-- DataTables CSS CDN -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="admin-layout">
@@ -120,7 +122,7 @@
             <!-- Topbar header -->
             <header class="admin-topbar">
                 <div class="topbar-left">
-                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Dashboard Overview</span>
+                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Analytics Charts</span>
                 </div>
             </header>
 
@@ -132,90 +134,56 @@
                 </div>
 
                 <div class="admin-card">
-                    <!-- Tab 0: Dashboard Overview -->
-                    <div id="dashboard-tab" class="tab-content active">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700;">Dashboard Summary</h3>
-                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;" id="dashLastUpdated">Last updated: Just now</span>
-                        </div>
-
-                        <!-- Statistics Grid -->
-                        <div class="dashboard-stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-card-icon-wrapper sales-icon">💰</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Total Revenue</span>
-                                    <span class="stat-card-value" id="dashTotalSales">$0.00</span>
-                                </div>
+                    <!-- Tab 4: Analytics Charts -->
+                    <div id="analytics-tab" class="tab-content active">
+                        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 2rem;">Shop Revenue & Activity Charts</h3>
+                        <div class="analytics-grid">
+                            <!-- Chart 1: Revenue Line -->
+                            <div class="chart-box">
+                                <span class="chart-title">Revenue Trends ($)</span>
+                                <canvas id="revenueChart" style="width: 100%; height: 220px;"></canvas>
                             </div>
-                            <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='users.html'">
-                                <div class="stat-card-icon-wrapper users-icon">👥</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Active Collectors</span>
-                                    <span class="stat-card-value" id="dashTotalUsers">0</span>
-                                </div>
+                            <!-- Chart 2: Figurines Sales Volume Bar -->
+                            <div class="chart-box">
+                                <span class="chart-title">Monthly Figurine Sales Volume (Units)</span>
+                                <canvas id="salesVolumeChart" style="width: 100%; height: 220px;"></canvas>
                             </div>
-                            <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='figurines.html'">
-                                <div class="stat-card-icon-wrapper toys-icon">🧸</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Toy Figurines</span>
-                                    <span class="stat-card-value" id="dashTotalFigurines">0</span>
-                                </div>
+                            <!-- Chart 3: Series Share Pie -->
+                            <div class="chart-box">
+                                <span class="chart-title">Sales Share by Figurine (Distribution %)</span>
+                                <canvas id="seriesPieChart" style="width: 100%; height: 220px;"></canvas>
                             </div>
-                            <div class="stat-card" id="dashLowStockCard">
-                                <div class="stat-card-icon-wrapper low-stock-icon" id="dashLowStockIcon">⚠️</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Low Stock Alerts</span>
-                                    <span class="stat-card-value" id="dashLowStockCount">0</span>
-                                </div>
+                            <!-- Chart 4: Collector Demographics Doughnut -->
+                            <div class="chart-box">
+                                <span class="chart-title">Customer Distribution by Area</span>
+                                <canvas id="addressDemographicsChart" style="width: 100%; height: 220px;"></canvas>
                             </div>
                         </div>
-
-                        <div class="dashboard-split-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; margin-top: 2rem;">
-                            <!-- Left: Recent Activity Feed -->
-                            <div>
-                                <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Recent Order Payments</h4>
-                                <div style="max-height: 380px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
-                                    <table class="activity-table" id="dashActivityTable">
-                                        <thead>
-                                            <tr>
-                                                <th>TXID</th>
-                                                <th>Collector</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">No order payments recorded.</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                        
+                        <!-- Procurement Expenses Section -->
+                        <div style="margin-top: 3rem; border-top: 1px solid rgba(197, 168, 128, 0.15); padding-top: 2rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <div>
+                                    <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--accent-gold-dark);">Supplier Procurement Expenses</h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">Total expenses from procurement purchase orders: <strong id="totalExpensesText" style="color: #c94a4a; font-size: 1rem;">$0.00</strong></p>
                                 </div>
+                                <button class="admin-action-btn btn-success" onclick="exportExpensesCSV()" style="padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 50px; font-weight: 600;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    Export Expenses CSV
+                                </button>
                             </div>
-
-                            <!-- Right: Reorder / Low Stock Quick Restock Panel -->
-                            <div>
-                                <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Restock Recommendation</h4>
-                                <div style="max-height: 380px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
-                                    <table class="activity-table" id="dashLowStockTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Figurine</th>
-                                                <th>Stock</th>
-                                                <th>Price</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">All items fully stocked!</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            <table id="expensesTable" class="dataTable display" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>PO Number</th>
+                                        <th>Supplier Name</th>
+                                        <th>Date</th>
+                                        <th>Total Cost</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

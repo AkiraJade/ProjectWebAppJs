@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figurines Catalog — Little Mono</title>
+    <!-- Inline Authorization Guard -->
+    <script>
+        const token = localStorage.getItem('token');
+        const userJson = localStorage.getItem('user');
+        if (!token || !userJson) {
+            alert("Unauthorized. Please sign in first.");
+            window.location.href = '../login.html';
+        } else {
+            try {
+                const user = JSON.parse(userJson);
+                if (!user || !user.role || user.role.trim().toLowerCase() !== 'admin') {
+                    alert("Forbidden. Administrators only.");
+                    window.location.href = '../index.html';
+                }
+            } catch (err) {
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Main Style system -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- DataTables CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-brand">LITTLE MONO</span>
+                <span class="sidebar-brand-sub">DESIGNER TOYS PANEL</span>
+            </div>
+            
+            <div class="sidebar-profile">
+                <div class="profile-avatar" id="adminAvatar">A</div>
+                <div class="profile-info">
+                    <span class="profile-name" id="adminName">Loading...</span>
+                    <span class="profile-role">Administrator</span>
+                </div>
+            </div>
+            
+            <!-- Sidebar Navigation Links -->
+            <nav class="sidebar-menu">
+                <div class="menu-section-title">Main Menu</div>
+                
+                <a class="menu-item" id="menu-dashboard" href="admin.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🏠</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-figurines" href="figurines.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🧸</span>
+                        <span>Figurines</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-users" href="users.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">👥</span>
+                        <span>Users</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-transactions" href="transactions.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">💼</span>
+                        <span>Transactions</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-suppliers" href="suppliers.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🏢</span>
+                        <span>Suppliers</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-analytics" href="analytics.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">📊</span>
+                        <span>Analytics</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-trash" href="trash.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🗑️</span>
+                        <span>Trash Bin</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="btn-sidebar-logout" id="logoutBtn">Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Pane -->
+        <div class="admin-main">
+            <!-- Topbar header -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Figurines Catalog</span>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Container -->
+            <main class="admin-content">
+                <div class="admin-header-panel">
+                    <h2 class="admin-title">Administration Panel</h2>
+                    <p class="admin-subtitle">Manage figurines, collector profiles, and order transactions.</p>
+                </div>
+
+                <div class="admin-card">
+                    <!-- Tab 1: Figurines CRUD -->
+                    <div id="figurines-tab" class="tab-content active">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700;">Toy Figurine Catalog</h3>
+                            <button class="admin-action-btn btn-primary" onclick="openAddModal()">+ Add Figurine</button>
+                        </div>
+                        <table id="figurinesTable" class="dataTable display" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Description</th>
+                                    <th>Cost Price</th>
+                                    <th>Sell Price</th>
+                                    <th>Stock Qty</th>
+                                    <th>Hero Image</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ADD PRODUCT MODAL -->
+    <div class="admin-modal" id="addModal">
+        <div class="admin-modal-card">
+            <button class="close-modal-btn" onclick="closeAddModal()">&times;</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--accent-gold-dark);">Add New Figurine</h3>
+            <form id="addForm" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label for="addDescription">Product Name / Description</label>
+                    <input type="text" id="addDescription" required placeholder="e.g. Hirono Little Mischief Blind Box">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="addCostPrice">Cost Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="addCostPrice" required placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="addSellPrice">Retail Sell Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="addSellPrice" required placeholder="0.00">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="addQty">Initial Inventory Count</label>
+                        <input type="number" min="0" id="addQty" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="addSupplier">Link Supplier</label>
+                        <select class="admin-select" id="addSupplier" style="width: 100%; height: 42px; border-radius: 8px;">
+                            <option value="">No Supplier / None</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="addEditionType">Edition Type</label>
+                        <input type="text" id="addEditionType" placeholder="e.g. Standard, Secret, Super Chase" value="Standard">
+                    </div>
+                    <div class="input-group">
+                        <label for="addProbability">Draw Probability</label>
+                        <input type="text" id="addProbability" placeholder="e.g. 1/12, 1/144" value="1/12">
+                    </div>
+                </div>
+                <!-- Categories Checkboxes -->
+                <div class="input-group">
+                    <label style="margin-bottom: 0.5rem; display: block;">Linked Series Category</label>
+                    <div style="display: flex; gap: 1.5rem; font-size: 0.9rem;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                            <input type="checkbox" name="addCategories" value="blind box"> Blind Box Series
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                            <input type="checkbox" name="addCategories" value="limited edition"> Limited Action Figurine
+                        </label>
+                    </div>
+                </div>
+                <!-- Tags Custom Badges -->
+                <div class="input-group">
+                    <label for="addTagInputField">Series Tags (Press Enter / Space to add)</label>
+                    <input type="text" id="addTagInputField" placeholder="Type tag and press enter...">
+                    <div class="tag-badges-container" id="addTagBadges" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;"></div>
+                </div>
+                <div class="input-group">
+                    <label for="addImages">Upload Product Images</label>
+                    <input type="file" id="addImages" multiple accept="image/*" style="border: none; padding: 0.25rem 0;">
+                </div>
+                <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Create Figurine Item</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT PRODUCT MODAL -->
+    <div class="admin-modal" id="editModal">
+        <div class="admin-modal-card">
+            <button class="close-modal-btn" onclick="closeEditModal()">&times;</button>
+            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--accent-gold-dark);">Update Toy Figurine</h3>
+            <form id="editForm" enctype="multipart/form-data">
+                <input type="hidden" id="editItemId">
+                <div class="input-group">
+                    <label for="editDescription">Product Name / Description</label>
+                    <input type="text" id="editDescription" required placeholder="e.g. Hirono Little Mischief Blind Box">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="editCostPrice">Cost Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="editCostPrice" required placeholder="0.00">
+                    </div>
+                    <div class="input-group">
+                        <label for="editSellPrice">Retail Sell Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="editSellPrice" required placeholder="0.00">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="editQty">Inventory Count</label>
+                        <input type="number" min="0" id="editQty" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="editSupplier">Link Supplier</label>
+                        <select class="admin-select" id="editSupplier" style="width: 100%; height: 42px; border-radius: 8px;">
+                            <option value="">No Supplier / None</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="editEditionType">Edition Type</label>
+                        <input type="text" id="editEditionType" placeholder="e.g. Standard, Secret">
+                    </div>
+                    <div class="input-group">
+                        <label for="editProbability">Draw Probability</label>
+                        <input type="text" id="editProbability" placeholder="e.g. 1/12, 1/144">
+                    </div>
+                </div>
+                <!-- Categories Checkboxes -->
+                <div class="input-group">
+                    <label style="margin-bottom: 0.5rem; display: block;">Linked Series Category</label>
+                    <div style="display: flex; gap: 1.5rem; font-size: 0.9rem;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                            <input type="checkbox" name="editCategories" value="blind box"> Blind Box Series
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                            <input type="checkbox" name="editCategories" value="limited edition"> Limited Action Figurine
+                        </label>
+                    </div>
+                </div>
+                <!-- Tags Custom Badges -->
+                <div class="input-group">
+                    <label for="editTagInputField">Series Tags (Press Enter / Space to add)</label>
+                    <input type="text" id="editTagInputField" placeholder="Type tag and press enter...">
+                    <div class="tag-badges-container" id="editTagBadges" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;"></div>
+                </div>
+                <div class="input-group" id="editCurrentImagesGroup" style="display: none;">
+                    <label style="margin-bottom: 0.5rem; display: block;">Active Figurine Photos</label>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="editCurrentImages"></div>
+                </div>
+                <div class="input-group">
+                    <label for="editImages">Upload More Photos</label>
+                    <input type="file" id="editImages" multiple accept="image/*" style="border: none; padding: 0.25rem 0;">
+                </div>
+                <button type="submit" class="btn-auth-submit" style="margin-top: 1rem;">Save Figurine Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- jQuery & Datatables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- Admin page controller script -->
+    <script src="../js/admin.js?v=1.0.7"></script>
+</body>
+</html>

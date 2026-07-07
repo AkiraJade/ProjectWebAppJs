@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collector Accounts — Little Mono</title>
+    <!-- Inline Authorization Guard -->
+    <script>
+        const token = localStorage.getItem('token');
+        const userJson = localStorage.getItem('user');
+        if (!token || !userJson) {
+            alert("Unauthorized. Please sign in first.");
+            window.location.href = '../login.html';
+        } else {
+            try {
+                const user = JSON.parse(userJson);
+                if (!user || !user.role || user.role.trim().toLowerCase() !== 'admin') {
+                    alert("Forbidden. Administrators only.");
+                    window.location.href = '../index.html';
+                }
+            } catch (err) {
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Main Style system -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- DataTables CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-brand">LITTLE MONO</span>
+                <span class="sidebar-brand-sub">DESIGNER TOYS PANEL</span>
+            </div>
+            
+            <div class="sidebar-profile">
+                <div class="profile-avatar" id="adminAvatar">A</div>
+                <div class="profile-info">
+                    <span class="profile-name" id="adminName">Loading...</span>
+                    <span class="profile-role">Administrator</span>
+                </div>
+            </div>
+            
+            <!-- Sidebar Navigation Links -->
+            <nav class="sidebar-menu">
+                <div class="menu-section-title">Main Menu</div>
+                
+                <a class="menu-item" id="menu-dashboard" href="admin.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🏠</span>
+                        <span>Dashboard</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-figurines" href="figurines.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🧸</span>
+                        <span>Figurines</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-users" href="users.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">👥</span>
+                        <span>Users</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-transactions" href="transactions.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">💼</span>
+                        <span>Transactions</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-suppliers" href="suppliers.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🏢</span>
+                        <span>Suppliers</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-analytics" href="analytics.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">📊</span>
+                        <span>Analytics</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+                
+                <a class="menu-item" id="menu-trash" href="trash.html">
+                    <div class="menu-item-left">
+                        <span class="menu-item-icon">🗑️</span>
+                        <span>Trash Bin</span>
+                    </div>
+                    <span class="menu-item-arrow">→</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="btn-sidebar-logout" id="logoutBtn">Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Pane -->
+        <div class="admin-main">
+            <!-- Topbar header -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">User Collector Accounts</span>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Container -->
+            <main class="admin-content">
+                <div class="admin-header-panel">
+                    <h2 class="admin-title">Administration Panel</h2>
+                    <p class="admin-subtitle">Manage figurines, collector profiles, and order transactions.</p>
+                </div>
+
+                <div class="admin-card">
+                    <!-- Tab 2: Users List -->
+                    <div id="users-tab" class="tab-content active">
+                        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem;">Collector Profiles</h3>
+                        <table id="usersTable" class="dataTable display" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Birth Date</th>
+                                    <th>Role Modifier</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- jQuery & Datatables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- Admin page controller script -->
+    <script src="../js/admin.js?v=1.0.7"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel — Little Mono</title>
+    <title>Payments & Invoices — Little Mono</title>
     <!-- Inline Authorization Guard -->
     <script>
         const token = localStorage.getItem('token');
@@ -120,7 +120,7 @@
             <!-- Topbar header -->
             <header class="admin-topbar">
                 <div class="topbar-left">
-                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Dashboard Overview</span>
+                    <span style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--accent-gold-dark);" id="current-tab-title">Payments & Invoicing</span>
                 </div>
             </header>
 
@@ -132,91 +132,31 @@
                 </div>
 
                 <div class="admin-card">
-                    <!-- Tab 0: Dashboard Overview -->
-                    <div id="dashboard-tab" class="tab-content active">
+                    <!-- Tab 3: Transactions / Payments -->
+                    <div id="transactions-tab" class="tab-content active">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700;">Dashboard Summary</h3>
-                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;" id="dashLastUpdated">Last updated: Just now</span>
+                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin: 0;">Order Payment Receipts</h3>
+                            <button class="admin-action-btn btn-success" onclick="exportTransactionsCSV()" style="padding: 0.6rem 1.2rem; border-radius: 50px; font-weight: 600;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                Export CSV Summary
+                            </button>
                         </div>
-
-                        <!-- Statistics Grid -->
-                        <div class="dashboard-stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-card-icon-wrapper sales-icon">💰</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Total Revenue</span>
-                                    <span class="stat-card-value" id="dashTotalSales">$0.00</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='users.html'">
-                                <div class="stat-card-icon-wrapper users-icon">👥</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Active Collectors</span>
-                                    <span class="stat-card-value" id="dashTotalUsers">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='figurines.html'">
-                                <div class="stat-card-icon-wrapper toys-icon">🧸</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Toy Figurines</span>
-                                    <span class="stat-card-value" id="dashTotalFigurines">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" id="dashLowStockCard">
-                                <div class="stat-card-icon-wrapper low-stock-icon" id="dashLowStockIcon">⚠️</div>
-                                <div class="stat-card-info">
-                                    <span class="stat-card-label">Low Stock Alerts</span>
-                                    <span class="stat-card-value" id="dashLowStockCount">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-split-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; margin-top: 2rem;">
-                            <!-- Left: Recent Activity Feed -->
-                            <div>
-                                <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Recent Order Payments</h4>
-                                <div style="max-height: 380px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
-                                    <table class="activity-table" id="dashActivityTable">
-                                        <thead>
-                                            <tr>
-                                                <th>TXID</th>
-                                                <th>Collector</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">No order payments recorded.</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Right: Reorder / Low Stock Quick Restock Panel -->
-                            <div>
-                                <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-gold-dark);">Restock Recommendation</h4>
-                                <div style="max-height: 380px; overflow-y: auto; border: 1px solid rgba(197, 168, 128, 0.15); border-radius: 8px; background-color: rgba(245, 239, 230, 0.15);">
-                                    <table class="activity-table" id="dashLowStockTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Figurine</th>
-                                                <th>Stock</th>
-                                                <th>Price</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">All items fully stocked!</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                        <table id="transactionsTable" class="dataTable display" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>TXID</th>
+                                    <th>OrderID</th>
+                                    <th>Collector</th>
+                                    <th>Email</th>
+                                    <th>Total Paid</th>
+                                    <th>Gateway</th>
+                                    <th>Date</th>
+                                    <th>Progress Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             </main>
